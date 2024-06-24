@@ -1,6 +1,6 @@
-package repository;
+package com.github.maxxmurugin.ewm.repository;
 
-import model.EndpointHit;
+import com.github.maxxmurugin.ewm.model.EndpointHit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 class HitRepositoryTest {
-
     @Autowired
     private HitRepository repository;
     private EndpointHit hit;
@@ -20,6 +19,7 @@ class HitRepositoryTest {
     @BeforeEach
     public void setUp() {
         hit = new EndpointHit();
+
         hit.setApp("testApp");
         hit.setUri("/hit/1");
         hit.setIp("10.1.1.1");
@@ -31,9 +31,6 @@ class HitRepositoryTest {
         EndpointHit stored = repository.save(hit);
 
         assertNotNull(stored);
+    }
 
-    }
-    @Test
-    void findByIp() {
-    }
 }

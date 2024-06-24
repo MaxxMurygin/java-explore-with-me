@@ -1,4 +1,4 @@
-package dto;
+package com.github.maxxmurugin.ewm.dto;
 
 import lombok.Data;
 

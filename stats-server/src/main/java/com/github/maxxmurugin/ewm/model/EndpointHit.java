@@ -1,4 +1,4 @@
-package model;
+package com.github.maxxmurugin.ewm.model;
 
 import lombok.Data;
 
@@ -7,7 +7,7 @@ import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "hits")
 @Data
 public class EndpointHit {
     @Id
