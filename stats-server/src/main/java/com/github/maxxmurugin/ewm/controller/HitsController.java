@@ -13,6 +13,7 @@ import javax.validation.Valid;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @RestController
 @RequestMapping
@@ -29,13 +30,16 @@ public class HitsController {
     }
 
     @GetMapping("/stats")
-    public StatsDto getStats(@RequestParam(name = "start") String startEncoded,
-                             @RequestParam(name = "end") String endEncoded,
-                             @RequestParam(name = "uris", required = false) String[] uris,
-                             @RequestParam(name = "unique", defaultValue = "false") Boolean unique) {
+    public List<StatsDto> getStats(@RequestParam(name = "start") String startEncoded,
+                                  @RequestParam(name = "end") String endEncoded,
+                                  @RequestParam(name = "uris", required = false) String[] uris,
+                                  @RequestParam(name = "unique", defaultValue = "false") boolean unique) {
 
         String start = URLDecoder.decode(startEncoded, StandardCharsets.UTF_8);
         String end = URLDecoder.decode(endEncoded, StandardCharsets.UTF_8);
+        if (uris == null) {
+            hitService.getStats(start, end, unique);
+        }
         return hitService.getStats(start, end, uris, unique);
 
     }
