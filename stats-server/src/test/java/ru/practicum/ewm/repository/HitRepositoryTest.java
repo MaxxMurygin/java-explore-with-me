@@ -1,7 +1,7 @@
-package com.github.maxxmurugin.ewm.repository;
+package ru.practicum.ewm.repository;
 
-import com.github.maxxmurugin.ewm.dto.StatsDto;
-import com.github.maxxmurugin.ewm.model.EndpointHit;
+import ru.practicum.ewm.dto.StatsDto;
+import ru.practicum.ewm.model.EndpointHit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

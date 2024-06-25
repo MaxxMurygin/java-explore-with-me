@@ -1,6 +1,6 @@
-package com.github.maxxmurugin.ewm.model;
+package ru.practicum.ewm.model;
 
-import com.github.maxxmurugin.ewm.dto.EndpointHitDto;
+import ru.practicum.ewm.dto.EndpointHitDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

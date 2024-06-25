@@ -1,7 +1,7 @@
-package com.github.maxxmurugin.ewm.service;
+package ru.practicum.ewm.service;
 
-import com.github.maxxmurugin.ewm.dto.EndpointHitDto;
-import com.github.maxxmurugin.ewm.dto.StatsDto;
+import ru.practicum.ewm.dto.EndpointHitDto;
+import ru.practicum.ewm.dto.StatsDto;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.github.maxxmurugin.ewm.dto;
+package ru.practicum.ewm.dto;
 
 import lombok.Data;
 

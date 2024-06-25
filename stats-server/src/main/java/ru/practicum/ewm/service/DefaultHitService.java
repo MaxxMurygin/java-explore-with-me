@@ -1,11 +1,11 @@
-package com.github.maxxmurugin.ewm.service;
+package ru.practicum.ewm.service;
 
-import com.github.maxxmurugin.ewm.dto.EndpointHitDto;
-import com.github.maxxmurugin.ewm.dto.StatsDto;
+import ru.practicum.ewm.dto.EndpointHitDto;
+import ru.practicum.ewm.dto.StatsDto;
 import lombok.RequiredArgsConstructor;
-import com.github.maxxmurugin.ewm.model.HitMapper;
+import ru.practicum.ewm.model.HitMapper;
 import org.springframework.stereotype.Service;
-import com.github.maxxmurugin.ewm.repository.HitRepository;
+import ru.practicum.ewm.repository.HitRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;

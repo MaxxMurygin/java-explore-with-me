@@ -1,4 +1,4 @@
-package com.github.maxxmurugin.ewm.model;
+package ru.practicum.ewm.model;
 
 import lombok.Data;
 
