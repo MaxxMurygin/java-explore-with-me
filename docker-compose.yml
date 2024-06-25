@@ -15,7 +15,6 @@ services:
 
   stats-server:
     build: stats-server
-    image: stats-server.img
     container_name: ewm-stats-server
     ports:
       - "9090:9090"

@@ -9,6 +9,7 @@ import ru.practicum.ewm.repository.HitRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,23 +23,28 @@ public class DefaultHitService implements HitService {
 
     @Override
     public List<StatsDto> getStats(String start, String end, String[] uris, boolean unique) {
+        LocalDateTime startTime = LocalDateTime.parse(start, HitMapper.formatter);
+        LocalDateTime endTime = LocalDateTime.parse(end, HitMapper.formatter);
+
         if (!unique) {
-            return hitRepository.findByStartAndEndAndUriIn(LocalDateTime.parse(start, HitMapper.formatter),
-                                                            LocalDateTime.parse(start, HitMapper.formatter),
-                                                            uris);
+            return hitRepository.findByStartAndEndAndUriIn(startTime, endTime, uris);
         }
-        return hitRepository.findByStartAndEndAndUniqueAndUriIn(LocalDateTime.parse(start, HitMapper.formatter),
-                                                                LocalDateTime.parse(start, HitMapper.formatter),
-                                                                uris);
+        return hitRepository.findByStartAndEndAndUniqueAndUriIn(startTime, endTime, uris);
     }
 
     @Override
     public List<StatsDto> getStats(String start, String end, boolean unique) {
+        LocalDateTime startTime = LocalDateTime.parse(start, HitMapper.formatter);
+        LocalDateTime endTime = LocalDateTime.parse(end, HitMapper.formatter);
+
         if (!unique) {
-            return hitRepository.findByStartAndEnd(LocalDateTime.parse(start, HitMapper.formatter),
-                    LocalDateTime.parse(start, HitMapper.formatter));
+            return hitRepository.findByStartAndEnd(startTime,endTime);
         }
-        return hitRepository.findByStartAndEndAndUnique(LocalDateTime.parse(start, HitMapper.formatter),
-                LocalDateTime.parse(start, HitMapper.formatter));
+        return hitRepository.findByStartAndEndAndUnique(startTime,endTime);
+    }
+
+    @Override
+    public List<EndpointHitDto> hitDtos() {
+        return hitRepository.findAll().stream().map(HitMapper::toDto).collect(Collectors.toList());
     }
 }

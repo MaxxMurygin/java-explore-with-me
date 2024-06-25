@@ -15,4 +15,5 @@ public interface HitService {
     List<StatsDto> getStats(String start,
                             String end,
                             boolean unique);
+    List<EndpointHitDto> hitDtos();
 }

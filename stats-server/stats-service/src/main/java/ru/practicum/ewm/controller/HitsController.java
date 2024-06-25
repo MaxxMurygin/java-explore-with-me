@@ -2,6 +2,7 @@ package ru.practicum.ewm.controller;
 
 import ru.practicum.ewm.dto.EndpointHitDto;
 import ru.practicum.ewm.dto.StatsDto;
+import ru.practicum.ewm.model.HitMapper;
 import ru.practicum.ewm.service.HitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -37,9 +39,17 @@ public class HitsController {
         String start = URLDecoder.decode(startEncoded, StandardCharsets.UTF_8);
         String end = URLDecoder.decode(endEncoded, StandardCharsets.UTF_8);
         if (uris == null) {
-            hitService.getStats(start, end, unique);
+            return hitService.getStats(start, end, unique);
         }
         return hitService.getStats(start, end, uris, unique);
+    }
 
+    @GetMapping("/hi")
+    public List<StatsDto> hi() {
+        List<StatsDto> result = hitService.getStats(LocalDateTime.now().minusYears(1).format(HitMapper.formatter),
+                LocalDateTime.now().plusYears(1).format(HitMapper.formatter),
+                false);
+        log.info(result.toString());
+        return result;
     }
 }
