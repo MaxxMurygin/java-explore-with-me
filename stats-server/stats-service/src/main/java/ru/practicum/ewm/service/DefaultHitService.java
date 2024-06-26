@@ -1,15 +1,14 @@
 package ru.practicum.ewm.service;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import ru.practicum.ewm.dto.EndpointHitDto;
 import ru.practicum.ewm.dto.StatsDto;
-import lombok.RequiredArgsConstructor;
 import ru.practicum.ewm.model.HitMapper;
-import org.springframework.stereotype.Service;
 import ru.practicum.ewm.repository.HitRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,10 +40,5 @@ public class DefaultHitService implements HitService {
             return hitRepository.findByStartAndEnd(startTime,endTime);
         }
         return hitRepository.findByStartAndEndAndUnique(startTime,endTime);
-    }
-
-    @Override
-    public List<EndpointHitDto> hitDtos() {
-        return hitRepository.findAll().stream().map(HitMapper::toDto).collect(Collectors.toList());
     }
 }

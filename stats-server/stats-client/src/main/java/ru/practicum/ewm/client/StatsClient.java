@@ -1,21 +1,15 @@
 package ru.practicum.ewm.client;
 
-import org.apache.tomcat.util.buf.UriUtil;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.web.util.UriUtils;
 import ru.practicum.ewm.dto.EndpointHitDto;
-import ru.practicum.ewm.dto.StatsDto;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 
 public class StatsClient {
     private final RestTemplate restTemplate = new RestTemplate();
