@@ -15,33 +15,37 @@ public interface HitRepository extends JpaRepository<EndpointHit, Long> {
     EndpointHit findByIp(String ip);
 
     @Query("SELECT new ru.practicum.ewm.dto.StatsDto(h.app, h.uri, COUNT(h.ip)) " +
-            "from EndpointHit h " +
+            "FROM EndpointHit h " +
             "WHERE h.created BETWEEN :start AND :end " +
-            "GROUP BY h.app, h.uri ")
+            "GROUP BY h.app, h.uri " +
+            "ORDER BY COUNT(h.ip) DESC ")
     List<StatsDto> findByStartAndEnd(@Param("start") LocalDateTime start,
                                      @Param("end")LocalDateTime end);
 
     @Query("SELECT new ru.practicum.ewm.dto.StatsDto(h.app, h.uri, COUNT(DISTINCT(h.ip))) " +
-            "from EndpointHit h " +
+            "FROM EndpointHit h " +
             "WHERE h.created BETWEEN :start AND :end " +
-            "GROUP BY h.app, h.uri ")
+            "GROUP BY h.app, h.uri " +
+            "ORDER BY COUNT(h.ip) DESC ")
     List<StatsDto> findByStartAndEndAndUnique(@Param("start") LocalDateTime start,
                                      @Param("end")LocalDateTime end);
 
     @Query("SELECT new ru.practicum.ewm.dto.StatsDto(h.app, h.uri, COUNT(h.ip)) " +
-            "from EndpointHit h " +
+            "FROM EndpointHit h " +
             "WHERE (h.created BETWEEN :start AND :end) AND " +
             "h.uri IN :uris " +
-            "GROUP BY h.app, h.uri ")
+            "GROUP BY h.app, h.uri " +
+            "ORDER BY COUNT(h.ip) DESC ")
     List<StatsDto> findByStartAndEndAndUriIn(@Param("start") LocalDateTime start,
                                              @Param("end")LocalDateTime end,
                                              @Param("uris") String[] uris);
 
     @Query("SELECT new ru.practicum.ewm.dto.StatsDto(h.app, h.uri, COUNT(DISTINCT(h.ip))) " +
-            "from EndpointHit h " +
+            "FROM EndpointHit h " +
             "WHERE (h.created BETWEEN :start AND :end) AND " +
             "h.uri IN :uris " +
-            "GROUP BY h.app, h.uri ")
+            "GROUP BY h.app, h.uri " +
+            "ORDER BY COUNT(h.ip) DESC ")
     List<StatsDto> findByStartAndEndAndUniqueAndUriIn(@Param("start") LocalDateTime start,
                                              @Param("end")LocalDateTime end,
                                              @Param("uris") String[] uris);
