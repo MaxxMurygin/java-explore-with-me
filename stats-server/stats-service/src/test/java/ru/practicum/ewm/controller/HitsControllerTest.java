@@ -40,6 +40,7 @@ class HitsControllerTest {
         start = LocalDateTime.now().minusDays(1).format(formatter);
         end = LocalDateTime.now().plusDays(1).format(formatter);
     }
+
     @Test
     @SneakyThrows
     void addHit() {
@@ -53,7 +54,6 @@ class HitsControllerTest {
                         .contentType(APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(hitDto)))
                 .andExpect(status().isCreated());
-
     }
 
     @Test
