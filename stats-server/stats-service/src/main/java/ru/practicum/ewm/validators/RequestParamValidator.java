@@ -1,6 +1,6 @@
 package ru.practicum.ewm.validators;
 
-import ru.practicum.ewm.exceptions.ValidationException;
+import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.model.HitMapper;
 
 import java.time.LocalDateTime;
