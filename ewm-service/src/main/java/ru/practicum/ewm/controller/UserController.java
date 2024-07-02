@@ -29,6 +29,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void remove(@PathVariable Long id) {
+
         log.error("server controller");
         userService.remove(id);
     }
