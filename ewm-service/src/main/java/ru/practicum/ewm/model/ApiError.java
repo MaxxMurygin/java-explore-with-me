@@ -7,9 +7,9 @@ import org.springframework.http.HttpStatus;
 @Data
 @Builder
 public class ApiError {
-    private String errors;
-    private String message;
-    private String reason;
     private HttpStatus status;
+    private String reason;
+    private String message;
     private String timestamp;
+    private String errors;
 }

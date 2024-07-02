@@ -1,17 +1,18 @@
 package ru.practicum.ewm.service;
 
-import ru.practicum.ewm.dto.UserDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import ru.practicum.ewm.dto.user.NewUserRequest;
+import ru.practicum.ewm.dto.user.UserDto;
 
 import java.util.List;
 
 public interface UserService {
-    UserDto create(UserDto userDto);
+    UserDto create(NewUserRequest newUserRequest);
 
     void remove(Long userId);
 
-    UserDto update(Long userId, UserDto userDto);
+    Page<UserDto> findAll(Pageable pageable);
 
-    List<UserDto> findAll();
-
-    UserDto findById(Long userId);
+    List<UserDto> findByIds(Long[] ids);
 }
