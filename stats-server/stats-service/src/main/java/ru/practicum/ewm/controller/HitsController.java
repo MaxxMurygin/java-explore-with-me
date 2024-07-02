@@ -8,7 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.EndpointHitDto;
 import ru.practicum.ewm.dto.StatsDto;
-import ru.practicum.ewm.exceptions.ValidationException;
+import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.service.HitService;
 import ru.practicum.ewm.validators.RequestParamValidator;
 
