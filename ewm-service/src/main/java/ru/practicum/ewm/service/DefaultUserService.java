@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 import ru.practicum.ewm.dto.user.NewUserRequest;
 import ru.practicum.ewm.dto.user.UserDto;
 import ru.practicum.ewm.dto.user.UserMapper;
-import ru.practicum.ewm.exception.EntityAlreadyExistException;
-import ru.practicum.ewm.exception.EntityNotFoundException;
+import ru.practicum.ewm.exception.AlreadyExistException;
+import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.model.User;
 import ru.practicum.ewm.repository.UserRepository;
 
@@ -26,12 +26,12 @@ public class DefaultUserService implements UserService{
         String name = newUserRequest.getName();
 
         if (userRepository.findByEmail(email).isPresent()) {
-            throw new EntityAlreadyExistException(User.class,
+            throw new AlreadyExistException(User.class,
                     String.format(" with email = %s ", email));
         }
 
         if (userRepository.findByName(name).isPresent()) {
-            throw new EntityAlreadyExistException(User.class,
+            throw new AlreadyExistException(User.class,
                     String.format(" with name = %s ", name));
         }
 
@@ -41,7 +41,7 @@ public class DefaultUserService implements UserService{
     @Override
     public void remove(Long userId) {
         userRepository.findById(userId).
-                orElseThrow(() -> new EntityNotFoundException(User.class, String.format(" with id=%d ", userId)));
+                orElseThrow(() -> new NotFoundException(User.class, String.format(" with id=%d ", userId)));
 
         userRepository.deleteById(userId);
 

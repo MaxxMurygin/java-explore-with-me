@@ -1,15 +1,16 @@
 package ru.practicum.ewm.service;
 
-import com.sun.xml.bind.v2.TODO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.category.CategoryMapper;
 import ru.practicum.ewm.dto.category.NewCategoryDto;
-import ru.practicum.ewm.exception.EntityAlreadyExistException;
-import ru.practicum.ewm.exception.EntityNotFoundException;
+import ru.practicum.ewm.exception.AlreadyExistException;
+import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.model.Category;
 import ru.practicum.ewm.repository.CategoryRepository;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +21,7 @@ public class DefaultCategoryService implements CategoryService {
         String name = newCategoryDto.getName();
 
         if (categoryRepository.findByName(name).isPresent()) {
-            throw new EntityAlreadyExistException(Category.class,
+            throw new AlreadyExistException(Category.class,
                     String.format(" with name = %s ", name));
         }
 
@@ -33,7 +34,7 @@ public class DefaultCategoryService implements CategoryService {
 // TODO Существуют события, связанные с категорией
 
         categoryRepository.findById(categoryId).
-                orElseThrow(() -> new EntityNotFoundException(Category.class,
+                orElseThrow(() -> new NotFoundException(Category.class,
                         String.format(" with id=%d ", categoryId)));
 
         categoryRepository.deleteById(categoryId);
@@ -42,16 +43,19 @@ public class DefaultCategoryService implements CategoryService {
     @Override
     public CategoryDto update(Long categoryId, NewCategoryDto newCategoryDto) {
         String name = newCategoryDto.getName();
-        Category updated = categoryRepository.findById(categoryId).
-                orElseThrow(() -> new EntityNotFoundException(Category.class,
+
+        Category stored = categoryRepository.findById(categoryId).
+                orElseThrow(() -> new NotFoundException(Category.class,
                         String.format(" with id=%d ", categoryId)));
 
-        if (categoryRepository.findByName(name).isPresent()) {
-            throw new EntityAlreadyExistException(Category.class,
+        Optional<Category> existing = categoryRepository.findByName(name);
+
+        if (existing.isPresent() && !existing.get().getName().equals(name)) {
+            throw new AlreadyExistException(Category.class,
                     String.format(" with name = %s ", name));
         }
-        updated.setName(name);
+        stored.setName(name);
 
-        return CategoryMapper.toDto(categoryRepository.save(updated));
+        return CategoryMapper.toDto(categoryRepository.save(stored));
     }
 }

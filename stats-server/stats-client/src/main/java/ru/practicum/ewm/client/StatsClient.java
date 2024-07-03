@@ -2,6 +2,7 @@ package ru.practicum.ewm.client;
 
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+@Service
 public class StatsClient {
     private final RestTemplate restTemplate = new RestTemplate();
     private final String url = "http://localhost:9090";

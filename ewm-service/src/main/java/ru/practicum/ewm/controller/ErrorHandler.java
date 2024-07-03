@@ -1,14 +1,16 @@
 package ru.practicum.ewm.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.practicum.ewm.exception.EntityAlreadyExistException;
-import ru.practicum.ewm.exception.EntityNotFoundException;
+import ru.practicum.ewm.exception.AlreadyExistException;
+import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.model.ApiError;
 
 import java.time.LocalDateTime;
@@ -18,8 +20,14 @@ import java.util.Arrays;
 @RestControllerAdvice
 @Slf4j
 public class ErrorHandler {
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    @ExceptionHandler({EntityNotFoundException.class})
+
+    private final DateTimeFormatter formatter;
+
+    public ErrorHandler(@Value("${ewm.date.format}")String format) {
+        this.formatter =  DateTimeFormatter.ofPattern(format);
+    }
+
+    @ExceptionHandler({NotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiError handleNotExist(final RuntimeException e) {
         log.debug(e.getMessage());
@@ -32,7 +40,7 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler({EntityAlreadyExistException.class, DataIntegrityViolationException.class})
+    @ExceptionHandler({AlreadyExistException.class, DataIntegrityViolationException.class, ValidationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleAlreadyExist(final RuntimeException e) {
         log.info(e.getMessage());
