@@ -9,19 +9,16 @@ import org.springframework.stereotype.Service;
 import ru.practicum.ewm.common.EwmDateFormatter;
 import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.category.CategoryMapper;
-import ru.practicum.ewm.dto.event.EventFullDto;
-import ru.practicum.ewm.dto.event.EventMapper;
-import ru.practicum.ewm.dto.event.NewEventDto;
-import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
-import ru.practicum.ewm.dto.user.UserDto;
+import ru.practicum.ewm.dto.event.*;
 import ru.practicum.ewm.dto.user.UserDtoShort;
 import ru.practicum.ewm.dto.user.UserMapper;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.model.Category;
 import ru.practicum.ewm.model.Event;
-import ru.practicum.ewm.model.enums.EventState;
 import ru.practicum.ewm.model.User;
+import ru.practicum.ewm.model.enums.EventState;
+import ru.practicum.ewm.model.enums.EventStateAdminAction;
 import ru.practicum.ewm.repository.CategoryRepository;
 import ru.practicum.ewm.repository.EventRepository;
 import ru.practicum.ewm.repository.UserRepository;
@@ -44,8 +41,6 @@ public class DefaultEventService implements EventService {
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
     private final DateTimeFormatter formatter = EwmDateFormatter.getFormatter();
-    @Autowired
-    private EventValidator validator;
     @Override
     public EventFullDto create(Long initiatorId, NewEventDto newEventDto) {
         Long categoryId = newEventDto.getCategory();
@@ -62,6 +57,7 @@ public class DefaultEventService implements EventService {
         newEvent.setPublishedOn(LocalDateTime.now());
         newEvent.setConfirmedRequests(0L);
         newEvent.setViews(0L);
+
         if (newEvent.getPaid() == null) {
             newEvent.setPaid(false);
         }
@@ -72,7 +68,11 @@ public class DefaultEventService implements EventService {
             newEvent.setRequestModeration(true);
         }
 
-        validator.validate(newEvent);
+        if (newEvent.getEventDate().isBefore(newEvent.getCreatedOn().plusHours(2))) {
+            throw new ValidationException(Event.class,
+                    "Событие должно начаться не ранее, чем через 2 часа после создания");
+        }
+
         return EventMapper.toEventFullDto(eventRepository.save(newEvent),
                 CategoryMapper.toDto(category),
                 UserMapper.toDtoShort(initiator));
@@ -111,6 +111,10 @@ public class DefaultEventService implements EventService {
         if (changedEventDto.getEventDate() != null) {
             stored.setEventDate(LocalDateTime.parse(changedEventDto.getEventDate(), formatter));
         }
+        if (stored.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new ValidationException(Event.class,
+                    "Нельзя редактировать событие, менее чем за 2 часа до его начала");
+        }
         if (changedEventDto.getLocation() != null) {
             stored.setLocationLat(changedEventDto.getLocation().getLat());
             stored.setLocationLon(changedEventDto.getLocation().getLon());
@@ -127,10 +131,47 @@ public class DefaultEventService implements EventService {
         if (changedEventDto.getTitle() != null) {
             stored.setTitle(changedEventDto.getTitle());
         }
-        validator.validate(stored);
+
         return EventMapper.toEventFullDto(eventRepository.save(stored),
                 CategoryMapper.toDto(category),
                 UserMapper.toDtoShort(initiator));
+    }
+
+    @Override
+    public EventFullDto update(Long eventId, UpdateEventAdminRequest changedEventDto) {
+        Event stored = eventRepository.findById(eventId).
+                orElseThrow(() -> new NotFoundException(Event.class,
+                        String.format(" with id=%d ", eventId)));
+
+        if (stored.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new ValidationException(Event.class,
+                    "Нельзя изменять событие, менее чем за 1 час до его начала");
+        }
+        stored.setPublishedOn(LocalDateTime.now());
+        if (changedEventDto.getStateAction().equals(EventStateAdminAction.PUBLISH_EVENT)) {
+            if (!stored.getState().equals(EventState.PENDING)) {
+                throw new ValidationException(Event.class,
+                        "Событие можно публиковать, только если оно в состоянии ожидания публикации.");
+            }
+            stored.setState(EventState.PUBLISHED);
+        } else {
+            if (stored.getState().equals(EventState.PENDING)) {
+                throw new ValidationException(Event.class,
+                        "Событие можно отклонить, только если оно еще не опубликовано.");
+            }
+            stored.setState(EventState.CANCELED);
+        }
+
+        stored.setDescription(changedEventDto.getDescription());
+        stored.setEventDate(LocalDateTime.parse(changedEventDto.getEventDate(), formatter));
+        stored.setLocationLat(changedEventDto.getLocation().getLat());
+        stored.setLocationLon(changedEventDto.getLocation().getLon());
+        stored.setPaid(changedEventDto.getPaid());
+        stored.setParticipantLimit(changedEventDto.getParticipantLimit());
+        stored.setRequestModeration(changedEventDto.getRequestModeration());
+        stored.setTitle(changedEventDto.getTitle());
+
+        return null;
     }
 
     @Override

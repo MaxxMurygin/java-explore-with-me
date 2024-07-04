@@ -3,16 +3,17 @@ package ru.practicum.ewm.service;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.ewm.dto.event.EventFullDto;
 import ru.practicum.ewm.dto.event.NewEventDto;
+import ru.practicum.ewm.dto.event.UpdateEventAdminRequest;
 import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 public interface EventService {
     EventFullDto create(Long initiatorId, NewEventDto newEventDto);
 
     EventFullDto update(Long initiatorId, Long eventId, UpdateEventUserRequest changedEventDto);
+
+    EventFullDto update(Long eventId, UpdateEventAdminRequest changedEventDto);
 
     EventFullDto findByUser(Long userId, Long eventId);
 
