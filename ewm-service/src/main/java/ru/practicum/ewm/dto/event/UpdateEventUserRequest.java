@@ -6,6 +6,6 @@ import ru.practicum.ewm.model.enums.EventStateUserAction;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class UpdateEventUserRequest extends UpdateEventRequest{
+public class UpdateEventUserRequest extends UpdateEventRequest {
     private EventStateUserAction stateAction;
 }

@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.category.NewCategoryDto;
-import ru.practicum.ewm.dto.event.EventFullDto;
+import ru.practicum.ewm.dto.event.EventDtoFull;
 import ru.practicum.ewm.dto.user.NewUserRequest;
 import ru.practicum.ewm.dto.user.UserDto;
 import ru.practicum.ewm.service.CategoryService;
@@ -17,7 +17,6 @@ import ru.practicum.ewm.service.EventService;
 import ru.practicum.ewm.service.UserService;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Positive;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -30,7 +29,7 @@ public class AdminController {
     private final UserService userService;
     private final CategoryService categoryService;
     private final EventService eventService;
-    Pageable userPage;
+
     @GetMapping("/users")
     public List<UserDto> findUsers(@RequestParam(name = "ids", required = false) Long[] ids,
                               @RequestParam(name = "from", defaultValue = "0") Integer from,
@@ -41,7 +40,7 @@ public class AdminController {
         }
 
         Pageable userPage = PageRequest.of(from, size, Sort.by("id").ascending());
-        return userService.findAll(userPage).getContent();
+        return userService.findAll(userPage);
     }
 
     @PostMapping("/users")
@@ -83,7 +82,7 @@ public class AdminController {
     }
 
     @GetMapping("/events")
-    public List<EventFullDto> getAllEvents(@RequestParam(name = "users", required = false) Long[] usersIds,
+    public List<EventDtoFull> getAllEvents(@RequestParam(name = "users", required = false) Long[] usersIds,
                                            @RequestParam(name = "states", required = false) String[] states,
                                            @RequestParam(name = "categories", required = false) Long[] categoriesIds,
                                            @RequestParam(name = "rangeStart", required = false) String start,
@@ -91,13 +90,19 @@ public class AdminController {
                                            @RequestParam(name = "from", defaultValue = "0") Integer from,
                                            @RequestParam(name = "size", defaultValue = "10") Integer size) {
 
-        userPage = PageRequest.of(from / size, size, Sort.by("eventDate").ascending());
+        Pageable userPage = PageRequest.of(from / size, size, Sort.by("eventDate").ascending());
         if (start != null) {
             start = URLDecoder.decode(start, StandardCharsets.UTF_8);
         }
         if (end != null) {
             end = URLDecoder.decode(end, StandardCharsets.UTF_8);
         }
+//        if (usersIds.length == 1 && usersIds[0] == 0) {
+//            usersIds = null;
+//        }
+//        if (categoriesIds.length == 1 && categoriesIds[0] == 0) {
+//            categoriesIds = null;
+//        }
         log.info("{} {} {} {} {}", usersIds, states, categoriesIds, start, end);
         return eventService.findAllByParams(usersIds, states, categoriesIds, start, end, userPage);
     }

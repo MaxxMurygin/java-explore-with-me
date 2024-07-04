@@ -1,6 +1,5 @@
 package ru.practicum.ewm.service;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.ewm.dto.user.NewUserRequest;
 import ru.practicum.ewm.dto.user.UserDto;
@@ -12,7 +11,7 @@ public interface UserService {
 
     void remove(Long userId);
 
-    Page<UserDto> findAll(Pageable pageable);
+    List<UserDto> findAll(Pageable pageable);
 
     List<UserDto> findByIds(Long[] ids);
 }

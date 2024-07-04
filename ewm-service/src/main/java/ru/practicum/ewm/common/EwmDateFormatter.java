@@ -13,6 +13,7 @@ public final class EwmDateFormatter {
     public void setStaticFormat(String format) {
         STRING_FORMAT = format;
     }
+
     public static DateTimeFormatter getFormatter() {
         return DateTimeFormatter.ofPattern(STRING_FORMAT);
     }

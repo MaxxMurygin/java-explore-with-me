@@ -13,6 +13,7 @@ import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.model.ApiError;
 
+import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -40,7 +41,8 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler({AlreadyExistException.class, DataIntegrityViolationException.class, ValidationException.class})
+    @ExceptionHandler({AlreadyExistException.class, DataIntegrityViolationException.class,
+            ValidationException.class, ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleAlreadyExist(final RuntimeException e) {
         log.info(e.getMessage());

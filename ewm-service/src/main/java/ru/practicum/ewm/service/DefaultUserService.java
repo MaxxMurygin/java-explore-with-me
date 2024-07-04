@@ -1,8 +1,6 @@
 package ru.practicum.ewm.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.dto.user.NewUserRequest;
@@ -19,8 +17,9 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class DefaultUserService implements UserService{
+public class DefaultUserService implements UserService {
     private final UserRepository userRepository;
+
     @Override
     public UserDto create(NewUserRequest newUserRequest) {
         String email = newUserRequest.getEmail();
@@ -41,19 +40,19 @@ public class DefaultUserService implements UserService{
 
     @Override
     public void remove(Long userId) {
-        userRepository.findById(userId).
-                orElseThrow(() -> new NotFoundException(User.class, String.format(" with id=%d ", userId)));
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(User.class, String.format(" with id=%d ", userId)));
 
         userRepository.deleteById(userId);
 
     }
 
     @Override
-    public Page<UserDto> findAll(Pageable pageable) {
+    public List<UserDto> findAll(Pageable pageable) {
 
-        return new PageImpl<>(userRepository.findAll(pageable).stream()
-                .map(UserMapper::toDto).
-                collect(Collectors.toList()));
+        return userRepository.findAll(pageable).stream()
+                .map(UserMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override

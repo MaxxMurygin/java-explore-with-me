@@ -2,7 +2,6 @@ package ru.practicum.ewm.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import ru.practicum.ewm.model.Category;
-import ru.practicum.ewm.model.User;
 
 import java.util.List;
 import java.util.Optional;

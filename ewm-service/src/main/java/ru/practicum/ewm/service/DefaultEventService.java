@@ -39,14 +39,15 @@ public class DefaultEventService implements EventService {
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
     private final DateTimeFormatter formatter = EwmDateFormatter.getFormatter();
+
     @Override
-    public EventFullDto create(Long initiatorId, NewEventDto newEventDto) {
+    public EventDtoFull create(Long initiatorId, NewEventDto newEventDto) {
         Long categoryId = newEventDto.getCategory();
-        User initiator = userRepository.findById(initiatorId).
-                orElseThrow(() -> new NotFoundException(User.class,
+        User initiator = userRepository.findById(initiatorId)
+                .orElseThrow(() -> new NotFoundException(User.class,
                                                             String.format(" with id=%d ", initiatorId)));
-        Category category = categoryRepository.findById(categoryId ).
-                orElseThrow(() -> new NotFoundException(Category.class,
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(Category.class,
                                                             String.format(" with id=%d ", categoryId)));
 
         Event newEvent = EventMapper.fromNewEventDto(initiatorId, newEventDto);
@@ -71,22 +72,22 @@ public class DefaultEventService implements EventService {
                     "Событие должно начаться не ранее, чем через 2 часа после создания");
         }
 
-        return EventMapper.toEventFullDto(eventRepository.save(newEvent),
+        return EventMapper.toEventDtoFull(eventRepository.save(newEvent),
                 CategoryMapper.toDto(category),
                 UserMapper.toDtoShort(initiator));
     }
 
     @Override
-    public EventFullDto update(Long initiatorId, Long eventId, UpdateEventUserRequest changedEventDto) {
-        User initiator = userRepository.findById(initiatorId).
-                orElseThrow(() -> new NotFoundException(User.class,
+    public EventDtoFull update(Long initiatorId, Long eventId, UpdateEventUserRequest changedEventDto) {
+        User initiator = userRepository.findById(initiatorId)
+                .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", initiatorId)));
-        Event stored = eventRepository.findById(eventId).
-                orElseThrow(() -> new NotFoundException(Event.class,
+        Event stored = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(Event.class,
                         String.format(" with id=%d ", eventId)));
         Long categoryId = stored.getCategoryId();
-        Category category = categoryRepository.findById(categoryId).
-                orElseThrow(() -> new NotFoundException(Category.class,
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(Category.class,
                         String.format(" with id=%d ", categoryId)));
 
         if (stored.getState().equals(EventState.PUBLISHED)) {
@@ -97,8 +98,8 @@ public class DefaultEventService implements EventService {
         }
         if (changedEventDto.getCategory() != null) {
             Long changedCategoryId = changedEventDto.getCategory();
-            category = categoryRepository.findById(changedCategoryId).
-                    orElseThrow(() -> new NotFoundException(Category.class,
+            category = categoryRepository.findById(changedCategoryId)
+                    .orElseThrow(() -> new NotFoundException(Category.class,
                             String.format(" with id=%d ", changedCategoryId)));
 
             stored.setCategoryId(changedCategoryId);
@@ -130,15 +131,15 @@ public class DefaultEventService implements EventService {
             stored.setTitle(changedEventDto.getTitle());
         }
 
-        return EventMapper.toEventFullDto(eventRepository.save(stored),
+        return EventMapper.toEventDtoFull(eventRepository.save(stored),
                 CategoryMapper.toDto(category),
                 UserMapper.toDtoShort(initiator));
     }
 
     @Override
-    public EventFullDto update(Long eventId, UpdateEventAdminRequest changedEventDto) {
-        Event stored = eventRepository.findById(eventId).
-                orElseThrow(() -> new NotFoundException(Event.class,
+    public EventDtoFull update(Long eventId, UpdateEventAdminRequest changedEventDto) {
+        Event stored = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(Event.class,
                         String.format(" with id=%d ", eventId)));
 
         if (stored.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
@@ -173,9 +174,9 @@ public class DefaultEventService implements EventService {
     }
 
     @Override
-    public List<EventFullDto> findAllByUser(Long userId, Pageable pageable) {
-        User user = userRepository.findById(userId).
-                orElseThrow(() -> new NotFoundException(User.class,
+    public List<EventDtoFull> findAllByUser(Long userId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", userId)));
         List<Event> eventList = eventRepository.findAllByInitiatorId(userId,pageable);
         List<Long> categoryIds = eventList.stream()
@@ -186,21 +187,17 @@ public class DefaultEventService implements EventService {
                 .collect(Collectors.toMap(CategoryDto::getId, c -> c));
 
         return eventList.stream()
-                .map(e -> EventMapper.toEventFullDto(e,
+                .map(e -> EventMapper.toEventDtoFull(e,
                         categoryMap.get(e.getCategoryId()),
                         UserMapper.toDtoShort(user)))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<EventFullDto> findAllByParams(Long[] usersIds,
-                                              String[] states,
-                                              Long[] categoriesIds,
-                                              String start,
-                                              String end,
-                                              Pageable pageable) {
-        log.info("{} {} {} {} {}", usersIds, states, categoriesIds, start, end);
-        List<Event> eventList = eventRepository.findAll(getQuery(usersIds, states, categoriesIds, start, end));
+    public List<EventDtoFull> findAllByParams(Long[] usersIds, String[] states, Long[] categoriesIds,
+                                              String start, String end, Pageable pageable) {
+        List<Event> eventList = eventRepository.findAll(getAdminQuery(usersIds, states, categoriesIds, start, end),
+                pageable).toList();
         List<Long> categoryIds = eventList.stream()
                 .map(Event::getCategoryId)
                 .collect(Collectors.toList());
@@ -216,37 +213,81 @@ public class DefaultEventService implements EventService {
 
 
         return eventList.stream()
-                .map(e -> EventMapper.toEventFullDto(e,
+                .map(e -> EventMapper.toEventDtoFull(e,
                         categoryMap.get(e.getCategoryId()),
                         ininiatorsMap.get(e.getInitiatorId())))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public EventFullDto findByUser(Long userId, Long eventId) {
-        User user = userRepository.findById(userId).
-                orElseThrow(() -> new NotFoundException(User.class,
+    public List<EventDtoShort> findAllByParams(String text, Long[] categoriesIds, Boolean paid,
+                                               String start, String end, Boolean onlyAvailable, Pageable pageable) {
+        List<Event> eventList = eventRepository
+                .findAll(getPublicQuery(text, categoriesIds, paid, start, end, onlyAvailable), pageable).toList();
+        List<Long> categoryIds = eventList.stream()
+                .map(Event::getCategoryId)
+                .collect(Collectors.toList());
+        Map<Long, CategoryDto> categoryMap = categoryRepository.findByIdIn(categoryIds).stream()
+                .map(CategoryMapper::toDto)
+                .collect(Collectors.toMap(CategoryDto::getId, c -> c));
+        List<Long> initiatorsIds = eventList.stream()
+                .map(Event::getInitiatorId)
+                .collect(Collectors.toList());
+        Map<Long, UserDtoShort> ininiatorsMap = userRepository.findByIdIn(initiatorsIds).stream()
+                .map(UserMapper::toDtoShort)
+                .collect(Collectors.toMap(UserDtoShort::getId, u -> u));
+
+        return eventList.stream()
+                .map(e -> EventMapper.toEventDtoShort(e,
+                        categoryMap.get(e.getCategoryId()),
+                        ininiatorsMap.get(e.getInitiatorId())))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public EventDtoFull findByUser(Long userId, Long eventId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", userId)));
-        Event event = eventRepository.findById(eventId).
-                orElseThrow(() -> new NotFoundException(Event.class,
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(Event.class,
                         String.format(" with id=%d ", eventId)));
         if (!event.getInitiatorId().equals(userId)) {
             throw new ValidationException(Event.class, "Полная информация доступна только создателю мероприятия.");
         }
 
-        Category category = categoryRepository.findById(event.getCategoryId()).
-                orElseThrow(() -> new NotFoundException(Category.class,
+        Category category = categoryRepository.findById(event.getCategoryId())
+                .orElseThrow(() -> new NotFoundException(Category.class,
                         String.format(" with id=%d ", event.getCategoryId())));
-        return EventMapper.toEventFullDto(event,
+        return EventMapper.toEventDtoFull(event,
                 CategoryMapper.toDto(category),
                 UserMapper.toDtoShort(user));
     }
 
-    private Specification<Event> getQuery(Long[] usersIds,
-                                          String[] states,
-                                          Long[] categoriesIds,
-                                          String start,
-                                          String end) {
+    @Override
+    public EventDtoFull findById(Long eventId) {
+        Event stored = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(Event.class,
+                        String.format(" with id=%d ", eventId)));
+        if (!stored.getState().equals(EventState.PUBLISHED)) {
+            throw new NotFoundException(Event.class, "Событие не опубликовано.");
+        }
+        Long initiatorId = stored.getInitiatorId();
+        User initiator = userRepository.findById(initiatorId)
+                .orElseThrow(() -> new NotFoundException(User.class,
+                        String.format(" with id=%d ", initiatorId)));
+        Long categoryId = stored.getCategoryId();
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(Category.class,
+                        String.format(" with id=%d ", categoryId)));
+
+        return EventMapper.toEventDtoFull(stored,
+                CategoryMapper.toDto(category),
+                UserMapper.toDtoShort(initiator));
+    }
+
+    private Specification<Event> getAdminQuery(Long[] usersIds, String[] states, Long[] categoriesIds,
+                                               String start, String end) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -270,6 +311,37 @@ public class DefaultEventService implements EventService {
             if (end != null) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"),
                         LocalDateTime.parse(end, formatter)));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    private Specification<Event> getPublicQuery(String text,Long[] categoriesIds, Boolean paid,
+                                                String start, String end, Boolean onlyAvailable) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (text != null) {
+                predicates.add(criteriaBuilder.like(root.get("annotation"), text));
+                predicates.add(criteriaBuilder.like(root.get("description"), text));
+            }
+            if (categoriesIds != null) {
+                predicates.add(criteriaBuilder.in(root.get("categoryId")).value(Arrays.asList(categoriesIds)));
+            }
+            if (paid != null) {
+                predicates.add(criteriaBuilder.equal(root.get("paid"), paid));
+            }
+            if (start != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"),
+                        LocalDateTime.parse(start, formatter)));
+            }
+            if (end != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"),
+                        LocalDateTime.parse(end, formatter)));
+            }
+            if (start == null && end == null) {
+                predicates.add(criteriaBuilder.greaterThan(root.get("eventDate"), LocalDateTime.now()));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Range;
 import ru.practicum.ewm.model.enums.EventState;
 
 import javax.persistence.*;
@@ -51,9 +52,11 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private EventState state;
     @NotNull
+    @Range(min = -90, max =  90, message = "Долгота в евклидовом пространстве находится в диапазоне [-90:90]")
     @Column(name = "location_lat")
     private Float locationLat;
     @NotNull
+    @Range(min = -180, max =  180, message = "Широта в евклидовом пространстве находится в диапазоне [-180:180]")
     @Column(name = "location_lon")
     private Float locationLon;
 }

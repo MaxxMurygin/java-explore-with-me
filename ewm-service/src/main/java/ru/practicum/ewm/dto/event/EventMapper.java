@@ -1,7 +1,5 @@
 package ru.practicum.ewm.dto.event;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.common.EwmDateFormatter;
 import ru.practicum.ewm.dto.category.CategoryDto;
@@ -32,8 +30,8 @@ public class EventMapper {
                 .build();
     }
 
-    public static EventFullDto toEventFullDto(Event event, CategoryDto category, UserDtoShort initiator) {
-        return EventFullDto.builder()
+    public static EventDtoFull toEventDtoFull(Event event, CategoryDto category, UserDtoShort initiator) {
+        return EventDtoFull.builder()
                 .annotation(event.getAnnotation())
                 .category(category)
                 .confirmedRequests(event.getConfirmedRequests())
@@ -48,6 +46,20 @@ public class EventMapper {
                 .publishedOn(event.getPublishedOn().format(formatter))
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState())
+                .title(event.getTitle())
+                .views(event.getViews())
+                .build();
+    }
+
+    public static EventDtoShort toEventDtoShort(Event event, CategoryDto category, UserDtoShort initiator) {
+        return EventDtoShort.builder()
+                .annotation(event.getAnnotation())
+                .category(category)
+                .confirmedRequests(event.getConfirmedRequests())
+                .eventDate(event.getEventDate().format(formatter))
+                .id(event.getId())
+                .initiator(initiator)
+                .paid(event.getPaid())
                 .title(event.getTitle())
                 .views(event.getViews())
                 .build();

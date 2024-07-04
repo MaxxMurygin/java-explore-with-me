@@ -1,29 +1,35 @@
 package ru.practicum.ewm.service;
 
 import org.springframework.data.domain.Pageable;
-import ru.practicum.ewm.dto.event.EventFullDto;
-import ru.practicum.ewm.dto.event.NewEventDto;
-import ru.practicum.ewm.dto.event.UpdateEventAdminRequest;
-import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
+import ru.practicum.ewm.dto.event.*;
 
 import java.util.List;
 
 public interface EventService {
-    EventFullDto create(Long initiatorId, NewEventDto newEventDto);
+    EventDtoFull create(Long initiatorId, NewEventDto newEventDto);
 
-    EventFullDto update(Long initiatorId, Long eventId, UpdateEventUserRequest changedEventDto);
+    EventDtoFull update(Long initiatorId, Long eventId, UpdateEventUserRequest changedEventDto);
 
-    EventFullDto update(Long eventId, UpdateEventAdminRequest changedEventDto);
+    EventDtoFull update(Long eventId, UpdateEventAdminRequest changedEventDto);
 
-    EventFullDto findByUser(Long userId, Long eventId);
+    EventDtoFull findByUser(Long userId, Long eventId);
 
+    EventDtoFull findById(Long eventId);
 
-    List<EventFullDto> findAllByUser(Long userId, Pageable pageable);
+    List<EventDtoFull> findAllByUser(Long userId, Pageable pageable);
 
-    List<EventFullDto> findAllByParams(Long[] usersIds,
+    List<EventDtoFull> findAllByParams(Long[] usersIds,
                                        String[] states,
                                        Long[] categoriesIds,
                                        String start,
                                        String end,
                                        Pageable pageable);
+
+    List<EventDtoShort> findAllByParams(String text,
+                                        Long[] categoriesIds,
+                                        Boolean paid,
+                                        String start,
+                                        String end,
+                                        Boolean onlyAvailable,
+                                        Pageable pageable);
 }

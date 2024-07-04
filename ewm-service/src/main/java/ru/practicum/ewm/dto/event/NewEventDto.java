@@ -8,12 +8,12 @@ import javax.validation.constraints.*;
 @Data
 public class NewEventDto {
     @NotBlank
-    @Size(min = 20, max = 2000, message = "Length of event annotation must be in range 20-2000")
+    @Size(min = 20, max = 2000, message = "Аннотация должна быть в диапазоне 20-2000 символов")
     private String annotation;
     @NotNull
     private Long category;
     @NotBlank
-    @Size(min = 20, max = 7000, message = "Length of event description must be in range 20-7000")
+    @Size(min = 20, max = 7000, message = "Описание должно быть в диапазоне 20-7000 символов")
     private String description;
     @NotBlank
     private String eventDate;
@@ -24,6 +24,6 @@ public class NewEventDto {
     private Integer participantLimit;
     private Boolean requestModeration;
     @NotBlank
-    @Size(min = 3, max = 120, message = "Length of event title must be in range 3-120")
+    @Size(min = 3, max = 120, message = "Заголовок должен быть в диапазоне 3-120 символов")
     private String title;
 }

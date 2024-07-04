@@ -5,21 +5,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Entity
-@Table(name = "users")
+@Table(name = "compilations")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class Compilation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotBlank
-    private String name;
-    @NotBlank
-    @Email
-    private String email;
+    @Size(min = 1, max = 50, message = "Заголовок должен быть в диапазоне 1-50 символов")
+    private String title;
+    private Boolean pinned;
 }

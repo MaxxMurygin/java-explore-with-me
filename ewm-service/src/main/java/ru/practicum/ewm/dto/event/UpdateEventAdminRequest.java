@@ -6,6 +6,6 @@ import ru.practicum.ewm.model.enums.EventStateAdminAction;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class UpdateEventAdminRequest extends UpdateEventRequest{
+public class UpdateEventAdminRequest extends UpdateEventRequest {
     private EventStateAdminAction stateAction;
 }
