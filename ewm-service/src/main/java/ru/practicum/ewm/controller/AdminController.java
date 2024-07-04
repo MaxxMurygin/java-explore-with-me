@@ -18,6 +18,8 @@ import ru.practicum.ewm.service.UserService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @RestController
@@ -90,8 +92,13 @@ public class AdminController {
                                            @RequestParam(name = "size", defaultValue = "10") Integer size) {
 
         userPage = PageRequest.of(from / size, size, Sort.by("eventDate").ascending());
-        Map<String, Object> params = new HashMap<>();
-
-        return eventService.findAllByParams(params, userPage);
+        if (start != null) {
+            start = URLDecoder.decode(start, StandardCharsets.UTF_8);
+        }
+        if (end != null) {
+            end = URLDecoder.decode(end, StandardCharsets.UTF_8);
+        }
+        log.info("{} {} {} {} {}", usersIds, states, categoriesIds, start, end);
+        return eventService.findAllByParams(usersIds, states, categoriesIds, start, end, userPage);
     }
 }

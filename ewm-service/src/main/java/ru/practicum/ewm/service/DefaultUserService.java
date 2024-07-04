@@ -13,6 +13,7 @@ import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.model.User;
 import ru.practicum.ewm.repository.UserRepository;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ public class DefaultUserService implements UserService{
 
     @Override
     public List<UserDto> findByIds(Long[] ids) {
-        return userRepository.findByIdIn(ids).stream()
+        return userRepository.findByIdIn(Arrays.asList(ids)).stream()
                 .map(UserMapper::toDto)
                 .collect(Collectors.toList());
     }

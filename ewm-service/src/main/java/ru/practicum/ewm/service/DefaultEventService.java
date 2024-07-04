@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.common.EwmDateFormatter;
 import ru.practicum.ewm.dto.category.CategoryDto;
@@ -12,6 +13,8 @@ import ru.practicum.ewm.dto.event.EventFullDto;
 import ru.practicum.ewm.dto.event.EventMapper;
 import ru.practicum.ewm.dto.event.NewEventDto;
 import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
+import ru.practicum.ewm.dto.user.UserDto;
+import ru.practicum.ewm.dto.user.UserDtoShort;
 import ru.practicum.ewm.dto.user.UserMapper;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.ValidationException;
@@ -24,8 +27,11 @@ import ru.practicum.ewm.repository.EventRepository;
 import ru.practicum.ewm.repository.UserRepository;
 import ru.practicum.ewm.validator.EventValidator;
 
+import javax.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -148,8 +154,33 @@ public class DefaultEventService implements EventService {
     }
 
     @Override
-    public List<EventFullDto> findAllByParams(Map<String, Object> params, Pageable pageable) {
-        return null;
+    public List<EventFullDto> findAllByParams(Long[] usersIds,
+                                              String[] states,
+                                              Long[] categoriesIds,
+                                              String start,
+                                              String end,
+                                              Pageable pageable) {
+        log.info("{} {} {} {} {}", usersIds, states, categoriesIds, start, end);
+        List<Event> eventList = eventRepository.findAll(getQuery(usersIds, states, categoriesIds, start, end));
+        List<Long> categoryIds = eventList.stream()
+                .map(Event::getCategoryId)
+                .collect(Collectors.toList());
+        Map<Long, CategoryDto> categoryMap = categoryRepository.findByIdIn(categoryIds).stream()
+                .map(CategoryMapper::toDto)
+                .collect(Collectors.toMap(CategoryDto::getId, c -> c));
+        List<Long> initiatorsIds = eventList.stream()
+                .map(Event::getInitiatorId)
+                .collect(Collectors.toList());
+        Map<Long, UserDtoShort> ininiatorsMap = userRepository.findByIdIn(initiatorsIds).stream()
+                .map(UserMapper::toDtoShort)
+                .collect(Collectors.toMap(UserDtoShort::getId, u -> u));
+
+
+        return eventList.stream()
+                .map(e -> EventMapper.toEventFullDto(e,
+                        categoryMap.get(e.getCategoryId()),
+                        ininiatorsMap.get(e.getInitiatorId())))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -170,5 +201,39 @@ public class DefaultEventService implements EventService {
         return EventMapper.toEventFullDto(event,
                 CategoryMapper.toDto(category),
                 UserMapper.toDtoShort(user));
+    }
+
+    private Specification<Event> getQuery(Long[] usersIds,
+                                          String[] states,
+                                          Long[] categoriesIds,
+                                          String start,
+                                          String end) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (usersIds != null) {
+                predicates.add(criteriaBuilder.in(root.get("initiatorId")).value(Arrays.asList(usersIds)));
+            }
+            if (states != null) {
+                List<EventState> stateList = Arrays.stream(states)
+                        .map(EventState::valueOf)
+                        .collect(Collectors.toList());
+
+                predicates.add(criteriaBuilder.in(root.get("state")).value(stateList));
+            }
+            if (categoriesIds != null) {
+                predicates.add(criteriaBuilder.in(root.get("categoryId")).value(Arrays.asList(categoriesIds)));
+            }
+            if (start != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"),
+                        LocalDateTime.parse(start, formatter)));
+            }
+            if (end != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"),
+                        LocalDateTime.parse(end, formatter)));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }
