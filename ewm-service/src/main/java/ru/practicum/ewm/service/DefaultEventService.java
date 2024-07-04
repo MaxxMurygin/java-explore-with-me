@@ -2,7 +2,6 @@ package ru.practicum.ewm.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,6 @@ import ru.practicum.ewm.model.enums.EventStateAdminAction;
 import ru.practicum.ewm.repository.CategoryRepository;
 import ru.practicum.ewm.repository.EventRepository;
 import ru.practicum.ewm.repository.UserRepository;
-import ru.practicum.ewm.validator.EventValidator;
 
 import javax.persistence.criteria.Predicate;
 import java.time.LocalDateTime;
