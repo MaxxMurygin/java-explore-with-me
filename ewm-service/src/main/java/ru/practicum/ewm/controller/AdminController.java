@@ -9,14 +9,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.category.NewCategoryDto;
+import ru.practicum.ewm.dto.event.EventFullDto;
 import ru.practicum.ewm.dto.user.NewUserRequest;
 import ru.practicum.ewm.dto.user.UserDto;
 import ru.practicum.ewm.service.CategoryService;
+import ru.practicum.ewm.service.EventService;
 import ru.practicum.ewm.service.UserService;
 
 import javax.validation.Valid;
-import java.util.Arrays;
-import java.util.List;
+import javax.validation.constraints.Positive;
+import java.util.*;
 
 @RestController
 @RequestMapping("/admin")
@@ -25,13 +27,14 @@ import java.util.List;
 public class AdminController {
     private final UserService userService;
     private final CategoryService categoryService;
+    private final EventService eventService;
+    Pageable userPage;
     @GetMapping("/users")
     public List<UserDto> findUsers(@RequestParam(name = "ids", required = false) Long[] ids,
                               @RequestParam(name = "from", defaultValue = "0") Integer from,
                               @RequestParam(name = "size", defaultValue = "10") Integer size) {
 
         if (ids != null) {
-            log.info("Запрос на вывод пользователей с ids = {}", Arrays.toString(ids));
             return userService.findByIds(ids);
         }
 
@@ -75,5 +78,20 @@ public class AdminController {
         log.info("Запрос на изменение категории с id = {}", id);
 
         return categoryService.update(id, newCategoryDto);
+    }
+
+    @GetMapping("/events")
+    public List<EventFullDto> getAllEvents(@RequestParam(name = "users", required = false) Long[] usersIds,
+                                           @RequestParam(name = "states", required = false) String[] states,
+                                           @RequestParam(name = "categories", required = false) Long[] categoriesIds,
+                                           @RequestParam(name = "rangeStart", required = false) String start,
+                                           @RequestParam(name = "rangeEnd", required = false) String end,
+                                           @RequestParam(name = "from", defaultValue = "0") Integer from,
+                                           @RequestParam(name = "size", defaultValue = "10") Integer size) {
+
+        userPage = PageRequest.of(from / size, size, Sort.by("eventDate").ascending());
+        Map<String, Object> params = new HashMap<>();
+
+        return eventService.findAllByParams(params, userPage);
     }
 }

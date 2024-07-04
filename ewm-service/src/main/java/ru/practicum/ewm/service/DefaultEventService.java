@@ -3,8 +3,10 @@ package ru.practicum.ewm.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.common.EwmDateFormatter;
+import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.category.CategoryMapper;
 import ru.practicum.ewm.dto.event.EventFullDto;
 import ru.practicum.ewm.dto.event.EventMapper;
@@ -24,6 +26,9 @@ import ru.practicum.ewm.validator.EventValidator;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -69,11 +74,9 @@ public class DefaultEventService implements EventService {
 
     @Override
     public EventFullDto update(Long initiatorId, Long eventId, UpdateEventUserRequest changedEventDto) {
-
         User initiator = userRepository.findById(initiatorId).
                 orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", initiatorId)));
-
         Event stored = eventRepository.findById(eventId).
                 orElseThrow(() -> new NotFoundException(Event.class,
                         String.format(" with id=%d ", eventId)));
@@ -122,5 +125,50 @@ public class DefaultEventService implements EventService {
         return EventMapper.toEventFullDto(eventRepository.save(stored),
                 CategoryMapper.toDto(category),
                 UserMapper.toDtoShort(initiator));
+    }
+
+    @Override
+    public List<EventFullDto> findAllByUser(Long userId, Pageable pageable) {
+        User user = userRepository.findById(userId).
+                orElseThrow(() -> new NotFoundException(User.class,
+                        String.format(" with id=%d ", userId)));
+        List<Event> eventList = eventRepository.findAllByInitiatorId(userId,pageable);
+        List<Long> categoryIds = eventList.stream()
+                .map(Event::getCategoryId)
+                .collect(Collectors.toList());
+        Map<Long, CategoryDto> categoryMap = categoryRepository.findByIdIn(categoryIds).stream()
+                .map(CategoryMapper::toDto)
+                .collect(Collectors.toMap(CategoryDto::getId, c -> c));
+
+        return eventList.stream()
+                .map(e -> EventMapper.toEventFullDto(e,
+                        categoryMap.get(e.getCategoryId()),
+                        UserMapper.toDtoShort(user)))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventFullDto> findAllByParams(Map<String, Object> params, Pageable pageable) {
+        return null;
+    }
+
+    @Override
+    public EventFullDto findByUser(Long userId, Long eventId) {
+        User user = userRepository.findById(userId).
+                orElseThrow(() -> new NotFoundException(User.class,
+                        String.format(" with id=%d ", userId)));
+        Event event = eventRepository.findById(eventId).
+                orElseThrow(() -> new NotFoundException(Event.class,
+                        String.format(" with id=%d ", eventId)));
+        if (!event.getInitiatorId().equals(userId)) {
+            throw new ValidationException(Event.class, "Полная информация доступна только создателю мероприятия.");
+        }
+
+        Category category = categoryRepository.findById(event.getCategoryId()).
+                orElseThrow(() -> new NotFoundException(Category.class,
+                        String.format(" with id=%d ", event.getCategoryId())));
+        return EventMapper.toEventFullDto(event,
+                CategoryMapper.toDto(category),
+                UserMapper.toDtoShort(user));
     }
 }
