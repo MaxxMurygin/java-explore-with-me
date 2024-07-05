@@ -2,6 +2,7 @@ package ru.practicum.ewm.service;
 
 import com.sun.jdi.request.EventRequestManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class DefaultRequestService implements RequestService {
     private final UserRepository userRepository;
@@ -120,12 +122,17 @@ public class DefaultRequestService implements RequestService {
     @Override
     public EventRequestStatusUpdateResult updateStatus(Long initiatorId, Long eventId,
                                                        EventRequestStatusUpdateRequest request) {
+        List<EventRequest> eventRequests;
         List<Long> requestsIds = request.getRequestsIds();
-        if ( requestsIds == null) {
-            throw new ValidationException(EventRequest.class, "Список заявок пуст.");
+
+        if (requestsIds == null) {
+            log.info(request.toString());
+            eventRequests = requestRepository.findAllByEventId(eventId);
+//            throw new ValidationException(EventRequest.class, "Список заявок пуст.");
+        } else {
+            eventRequests = requestRepository.findAllById(requestsIds);
         }
         EventRequestStatus action = request.getStatus();
-        List<EventRequest> eventRequests = requestRepository.findAllById(requestsIds);
 
         userRepository.findById(initiatorId)
                 .orElseThrow(() -> new NotFoundException(User.class,

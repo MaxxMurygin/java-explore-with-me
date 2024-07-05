@@ -149,17 +149,27 @@ public class DefaultEventService implements EventService {
     @Override
     @Transactional
     public EventDtoFull update(Long eventId, UpdateEventAdminRequest changedEventDto) {
+
         Event stored = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(Event.class,
                         String.format(" with id=%d ", eventId)));
+        log.info(stored.toString());
 
+        Long initiatorId = stored.getInitiatorId();
+                User initiator = userRepository.findById(initiatorId)
+                .orElseThrow(() -> new NotFoundException(User.class,
+                        String.format(" with id=%d ", initiatorId)));
+        Long categoryId = stored.getCategoryId();
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(Category.class,
+                        String.format(" with id=%d ", categoryId)));
         if (stored.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
             throw new ValidationException(Event.class,
                     "Нельзя изменять событие, менее чем за 1 час до его начала");
         }
         stored.setPublishedOn(LocalDateTime.now());
         if (changedEventDto.getStateAction().equals(EventStateAdminAction.PUBLISH_EVENT)) {
-            if (stored.getState().equals(EventState.PENDING)) {
+            if (!stored.getState().equals(EventState.PENDING)) {
                 throw new ValidationException(Event.class,
                         "Событие можно публиковать, только если оно в состоянии ожидания публикации.");
             }
@@ -172,16 +182,32 @@ public class DefaultEventService implements EventService {
             stored.setState(EventState.CANCELED);
         }
 
-        stored.setDescription(changedEventDto.getDescription());
-        stored.setEventDate(LocalDateTime.parse(changedEventDto.getEventDate(), formatter));
-        stored.setLocationLat(changedEventDto.getLocation().getLat());
-        stored.setLocationLon(changedEventDto.getLocation().getLon());
-        stored.setPaid(changedEventDto.getPaid());
-        stored.setParticipantLimit(changedEventDto.getParticipantLimit());
-        stored.setRequestModeration(changedEventDto.getRequestModeration());
-        stored.setTitle(changedEventDto.getTitle());
+        if (changedEventDto.getDescription() != null) {
+            stored.setDescription(changedEventDto.getDescription());
+        }
+        if (changedEventDto.getEventDate() != null) {
+            stored.setEventDate(LocalDateTime.parse(changedEventDto.getEventDate(), formatter));
+        }
+        if (changedEventDto.getLocation() != null) {
+            stored.setLocationLat(changedEventDto.getLocation().getLat());
+            stored.setLocationLon(changedEventDto.getLocation().getLon());
+        }
+        if (changedEventDto.getPaid() != null) {
+            stored.setPaid(changedEventDto.getPaid());
+        }
+        if (changedEventDto.getParticipantLimit() != null) {
+            stored.setParticipantLimit(changedEventDto.getParticipantLimit());
+        }
+        if (changedEventDto.getRequestModeration() != null) {
+            stored.setRequestModeration(changedEventDto.getRequestModeration());
+        }
+        if (changedEventDto.getTitle() != null) {
+            stored.setTitle(changedEventDto.getTitle());
+        }
 
-        return null;
+        return EventMapper.toEventDtoFull(eventRepository.save(stored),
+                CategoryMapper.toDto(category),
+                UserMapper.toDtoShort(initiator));
     }
 
     @Override

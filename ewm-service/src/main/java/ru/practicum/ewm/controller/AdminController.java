@@ -103,12 +103,12 @@ public class AdminController {
         if (end != null) {
             end = URLDecoder.decode(end, StandardCharsets.UTF_8);
         }
-//        if (usersIds.length == 1 && usersIds[0] == 0) {
-//            usersIds = null;
-//        }
-//        if (categoriesIds.length == 1 && categoriesIds[0] == 0) {
-//            categoriesIds = null;
-//        }
+        if (usersIds.length == 1 && usersIds[0] == 0) {
+            usersIds = null;
+        }
+        if (categoriesIds.length == 1 && categoriesIds[0] == 0) {
+            categoriesIds = null;
+        }
         log.info("{} {} {} {} {}", usersIds, states, categoriesIds, start, end);
         return eventService.findAllByParams(usersIds, states, categoriesIds, start, end, userPage);
     }
