@@ -2,6 +2,7 @@ package ru.practicum.ewm.dto.compilation;
 
 import lombok.Builder;
 import lombok.Data;
+import ru.practicum.ewm.dto.event.EventDtoShort;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -11,7 +12,7 @@ import java.util.List;
 @Data
 @Builder
 public class CompilationDto {
-    private List<Long> events;
+    private List<EventDtoShort> events;
     @NotNull
     private Long id;
     @NotNull

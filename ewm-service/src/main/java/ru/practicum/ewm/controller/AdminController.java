@@ -9,10 +9,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.category.NewCategoryDto;
+import ru.practicum.ewm.dto.compilation.CompilationDto;
+import ru.practicum.ewm.dto.compilation.NewCompilationDto;
 import ru.practicum.ewm.dto.event.EventDtoFull;
+import ru.practicum.ewm.dto.event.UpdateEventAdminRequest;
+import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
 import ru.practicum.ewm.dto.user.NewUserRequest;
 import ru.practicum.ewm.dto.user.UserDto;
 import ru.practicum.ewm.service.CategoryService;
+import ru.practicum.ewm.service.CompilationService;
 import ru.practicum.ewm.service.EventService;
 import ru.practicum.ewm.service.UserService;
 
@@ -29,6 +34,7 @@ public class AdminController {
     private final UserService userService;
     private final CategoryService categoryService;
     private final EventService eventService;
+    private final CompilationService compilationService;
 
     @GetMapping("/users")
     public List<UserDto> findUsers(@RequestParam(name = "ids", required = false) Long[] ids,
@@ -105,5 +111,18 @@ public class AdminController {
 //        }
         log.info("{} {} {} {} {}", usersIds, states, categoriesIds, start, end);
         return eventService.findAllByParams(usersIds, states, categoriesIds, start, end, userPage);
+    }
+
+    @PatchMapping("/events/{eventId}")
+    public EventDtoFull patchEvent (@PathVariable(name = "eventId") Long eventId,
+                                    @Valid @RequestBody UpdateEventAdminRequest changedEventDto) {
+        return eventService.update(eventId, changedEventDto);
+    }
+
+    @PostMapping("/compilations")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CompilationDto createCompilation(@Valid @RequestBody NewCompilationDto newCompilationDto) {
+
+        return compilationService.create(newCompilationDto);
     }
 }

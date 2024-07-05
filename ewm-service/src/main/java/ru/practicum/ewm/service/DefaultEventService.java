@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.common.EwmDateFormatter;
 import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.category.CategoryMapper;
@@ -18,6 +19,7 @@ import ru.practicum.ewm.model.Event;
 import ru.practicum.ewm.model.User;
 import ru.practicum.ewm.model.enums.EventState;
 import ru.practicum.ewm.model.enums.EventStateAdminAction;
+import ru.practicum.ewm.model.enums.EventStateUserAction;
 import ru.practicum.ewm.repository.CategoryRepository;
 import ru.practicum.ewm.repository.EventRepository;
 import ru.practicum.ewm.repository.UserRepository;
@@ -34,13 +36,16 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class DefaultEventService implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
     private final DateTimeFormatter formatter = EwmDateFormatter.getFormatter();
 
+
     @Override
+    @Transactional
     public EventDtoFull create(Long initiatorId, NewEventDto newEventDto) {
         Long categoryId = newEventDto.getCategory();
         User initiator = userRepository.findById(initiatorId)
@@ -52,7 +57,7 @@ public class DefaultEventService implements EventService {
 
         Event newEvent = EventMapper.fromNewEventDto(initiatorId, newEventDto);
         newEvent.setCreatedOn(LocalDateTime.now());
-        newEvent.setState(EventState.PUBLISHED);
+        newEvent.setState(EventState.PENDING);
         newEvent.setPublishedOn(LocalDateTime.now());
         newEvent.setConfirmedRequests(0L);
         newEvent.setViews(0L);
@@ -66,7 +71,6 @@ public class DefaultEventService implements EventService {
         if (newEvent.getRequestModeration() == null) {
             newEvent.setRequestModeration(true);
         }
-
         if (newEvent.getEventDate().isBefore(newEvent.getCreatedOn().plusHours(2))) {
             throw new ValidationException(Event.class,
                     "Событие должно начаться не ранее, чем через 2 часа после создания");
@@ -78,6 +82,7 @@ public class DefaultEventService implements EventService {
     }
 
     @Override
+    @Transactional
     public EventDtoFull update(Long initiatorId, Long eventId, UpdateEventUserRequest changedEventDto) {
         User initiator = userRepository.findById(initiatorId)
                 .orElseThrow(() -> new NotFoundException(User.class,
@@ -130,6 +135,11 @@ public class DefaultEventService implements EventService {
         if (changedEventDto.getTitle() != null) {
             stored.setTitle(changedEventDto.getTitle());
         }
+        if (changedEventDto.getStateAction().equals(EventStateUserAction.CANCEL_REVIEW)) {
+            stored.setState(EventState.CANCELED);
+        } else {
+            stored.setState(EventState.PENDING);
+        }
 
         return EventMapper.toEventDtoFull(eventRepository.save(stored),
                 CategoryMapper.toDto(category),
@@ -137,6 +147,7 @@ public class DefaultEventService implements EventService {
     }
 
     @Override
+    @Transactional
     public EventDtoFull update(Long eventId, UpdateEventAdminRequest changedEventDto) {
         Event stored = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(Event.class,
@@ -148,13 +159,13 @@ public class DefaultEventService implements EventService {
         }
         stored.setPublishedOn(LocalDateTime.now());
         if (changedEventDto.getStateAction().equals(EventStateAdminAction.PUBLISH_EVENT)) {
-            if (!stored.getState().equals(EventState.PENDING)) {
+            if (stored.getState().equals(EventState.PENDING)) {
                 throw new ValidationException(Event.class,
                         "Событие можно публиковать, только если оно в состоянии ожидания публикации.");
             }
             stored.setState(EventState.PUBLISHED);
         } else {
-            if (stored.getState().equals(EventState.PENDING)) {
+            if (stored.getState().equals(EventState.PUBLISHED)) {
                 throw new ValidationException(Event.class,
                         "Событие можно отклонить, только если оно еще не опубликовано.");
             }
@@ -190,6 +201,29 @@ public class DefaultEventService implements EventService {
                 .map(e -> EventMapper.toEventDtoFull(e,
                         categoryMap.get(e.getCategoryId()),
                         UserMapper.toDtoShort(user)))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventDtoShort> findAllByIds(List<Long> eventsIds) {
+        List<Event> eventList = eventRepository.findByIdIn(eventsIds);
+        List<Long> categoryIds = eventList.stream()
+                .map(Event::getCategoryId)
+                .collect(Collectors.toList());
+        Map<Long, CategoryDto> categoryMap = categoryRepository.findByIdIn(categoryIds).stream()
+                .map(CategoryMapper::toDto)
+                .collect(Collectors.toMap(CategoryDto::getId, c -> c));
+        List<Long> initiatorsIds = eventList.stream()
+                .map(Event::getInitiatorId)
+                .collect(Collectors.toList());
+        Map<Long, UserDtoShort> ininiatorsMap = userRepository.findByIdIn(initiatorsIds).stream()
+                .map(UserMapper::toDtoShort)
+                .collect(Collectors.toMap(UserDtoShort::getId, u -> u));
+
+        return eventList.stream()
+                .map(e -> EventMapper.toEventDtoShort(e,
+                        categoryMap.get(e.getCategoryId()),
+                        ininiatorsMap.get(e.getInitiatorId())))
                 .collect(Collectors.toList());
     }
 
@@ -280,7 +314,7 @@ public class DefaultEventService implements EventService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException(Category.class,
                         String.format(" with id=%d ", categoryId)));
-
+        stored.setViews(stored.getViews() + 1);
         return EventMapper.toEventDtoFull(stored,
                 CategoryMapper.toDto(category),
                 UserMapper.toDtoShort(initiator));
@@ -342,6 +376,10 @@ public class DefaultEventService implements EventService {
             }
             if (start == null && end == null) {
                 predicates.add(criteriaBuilder.greaterThan(root.get("eventDate"), LocalDateTime.now()));
+            }
+            if (onlyAvailable) {
+                predicates.add(criteriaBuilder.lessThan(root.get("confirmedRequests"),
+                        root.get("participantLimit")));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

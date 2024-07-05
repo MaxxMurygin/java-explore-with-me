@@ -18,7 +18,7 @@ public class StatsClient {
     private final String url = "http://localhost:9090";
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public ResponseEntity<Object> post(String app, String uri, String ip, LocalDateTime timestamp) {
+    public void post(String app, String uri, String ip, LocalDateTime timestamp) {
         String uriString = UriComponentsBuilder.fromUriString(url + "/hit")
                 .toUriString();
         EndpointHitDto body = new EndpointHitDto(app,
@@ -26,7 +26,7 @@ public class StatsClient {
                 ip,
                 timestamp.format(formatter));
 
-        return makeAndSendRequest(HttpMethod.POST, uriString, body);
+        makeAndSendRequest(HttpMethod.POST, uriString, body);
     }
 
     public ResponseEntity<Object> get(LocalDateTime start, LocalDateTime end, String[] uris, boolean unique) {

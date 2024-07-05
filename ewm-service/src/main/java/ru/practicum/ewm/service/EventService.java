@@ -18,6 +18,8 @@ public interface EventService {
 
     List<EventDtoFull> findAllByUser(Long userId, Pageable pageable);
 
+    List<EventDtoShort> findAllByIds(List<Long> eventsIds);
+
     List<EventDtoFull> findAllByParams(Long[] usersIds,
                                        String[] states,
                                        Long[] categoriesIds,
