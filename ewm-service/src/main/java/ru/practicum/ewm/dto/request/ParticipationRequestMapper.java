@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 public class ParticipationRequestMapper {
     private static final DateTimeFormatter formatter = EwmDateFormatter.getFormatter();
+
     public static ParticipationRequestDto toDto(EventRequest request) {
         return ParticipationRequestDto.builder()
                 .id(request.getId())

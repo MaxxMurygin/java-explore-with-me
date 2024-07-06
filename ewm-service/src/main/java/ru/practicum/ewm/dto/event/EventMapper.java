@@ -1,6 +1,5 @@
 package ru.practicum.ewm.dto.event;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.common.EwmDateFormatter;
 import ru.practicum.ewm.dto.category.CategoryMapper;

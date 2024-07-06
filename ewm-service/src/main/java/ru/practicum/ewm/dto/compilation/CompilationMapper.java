@@ -1,10 +1,8 @@
 package ru.practicum.ewm.dto.compilation;
 
-import ru.practicum.ewm.dto.event.EventDtoShort;
 import ru.practicum.ewm.dto.event.EventMapper;
 import ru.practicum.ewm.model.Compilation;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class CompilationMapper {

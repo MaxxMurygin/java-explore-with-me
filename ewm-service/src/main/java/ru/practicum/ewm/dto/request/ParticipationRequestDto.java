@@ -4,8 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 import ru.practicum.ewm.model.enums.EventRequestStatus;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 public class ParticipationRequestDto {

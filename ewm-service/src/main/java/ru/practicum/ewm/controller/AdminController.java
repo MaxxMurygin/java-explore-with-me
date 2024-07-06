@@ -101,8 +101,9 @@ public class AdminController {
     }
 
     @PatchMapping("/events/{eventId}")
-    public EventDtoFull patchEvent (@PathVariable(name = "eventId") Long eventId,
-                                    @Valid @RequestBody UpdateEventAdminRequest changedEventDto) {
+    public EventDtoFull patchEvent(
+            @PathVariable(name = "eventId") Long eventId,
+            @Valid @RequestBody UpdateEventAdminRequest changedEventDto) {
 
         return eventService.update(eventId, changedEventDto);
     }

@@ -7,11 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.common.EwmDateFormatter;
-import ru.practicum.ewm.dto.category.CategoryDto;
-import ru.practicum.ewm.dto.category.CategoryMapper;
 import ru.practicum.ewm.dto.event.*;
-import ru.practicum.ewm.dto.user.UserDtoShort;
-import ru.practicum.ewm.dto.user.UserMapper;
 import ru.practicum.ewm.exception.BadRequestException;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.ValidationException;
@@ -33,7 +29,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
