@@ -145,13 +145,12 @@ public class DefaultRequestService implements RequestService {
         Long confirmed = event.getConfirmedRequests();
 
         for (EventRequest er: eventRequests) {
-            if (confirmed < limit) {
+            if (confirmed <= limit) {
                 if (er.getStatus().equals(EventRequestStatus.PENDING)) {
                     er.setStatus(action);
                     if (action.equals(EventRequestStatus.CONFIRMED)) {
                         ++confirmed;
                     }
-
                 } else {
                     throw new ValidationException(
                             EventRequest.class, "Можно изменить только ожидающую заявку.");
