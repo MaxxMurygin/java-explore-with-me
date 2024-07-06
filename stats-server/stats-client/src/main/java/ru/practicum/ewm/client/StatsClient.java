@@ -1,5 +1,7 @@
 package ru.practicum.ewm.client;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -13,14 +15,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
+@Slf4j
 public class StatsClient {
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String url = "http://localhost:9090";
+    @Value("${ewm.stats.server.url}")
+    private String url;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+
 
     public void post(String app, String uri, String ip, LocalDateTime timestamp) {
         String uriString = UriComponentsBuilder.fromUriString(url + "/hit")
                 .toUriString();
+
         EndpointHitDto body = new EndpointHitDto(app,
                 uri,
                 ip,

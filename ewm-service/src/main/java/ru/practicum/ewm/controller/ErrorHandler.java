@@ -1,13 +1,13 @@
 package ru.practicum.ewm.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.practicum.ewm.common.EwmDateFormatter;
 import ru.practicum.ewm.exception.AlreadyExistException;
 import ru.practicum.ewm.exception.BadRequestException;
 import ru.practicum.ewm.exception.NotFoundException;
@@ -23,11 +23,7 @@ import java.util.Arrays;
 @Slf4j
 public class ErrorHandler {
 
-    private final DateTimeFormatter formatter;
-
-    public ErrorHandler(@Value("${ewm.date.format}")String format) {
-        this.formatter =  DateTimeFormatter.ofPattern(format);
-    }
+    private final DateTimeFormatter formatter = EwmDateFormatter.getFormatter();
 
     @ExceptionHandler({NotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
