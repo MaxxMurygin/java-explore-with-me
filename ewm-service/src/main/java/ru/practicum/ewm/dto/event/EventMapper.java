@@ -1,10 +1,9 @@
 package ru.practicum.ewm.dto.event;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.common.EwmDateFormatter;
-import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.category.CategoryMapper;
-import ru.practicum.ewm.dto.user.UserDtoShort;
 import ru.practicum.ewm.dto.user.UserMapper;
 import ru.practicum.ewm.model.Category;
 import ru.practicum.ewm.model.Event;

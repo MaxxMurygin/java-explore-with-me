@@ -1,19 +1,22 @@
 package ru.practicum.ewm.dto.request;
 
+import ru.practicum.ewm.common.EwmDateFormatter;
 import ru.practicum.ewm.model.EventRequest;
 import ru.practicum.ewm.model.enums.EventRequestStatus;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ParticipationRequestMapper {
+    private static final DateTimeFormatter formatter = EwmDateFormatter.getFormatter();
     public static ParticipationRequestDto toDto(EventRequest request) {
         return ParticipationRequestDto.builder()
                 .id(request.getId())
-                .requesterId(request.getRequester().getId())
-                .eventId(request.getEvent().getId())
-                .created(request.getCreated())
+                .requester(request.getRequester().getId())
+                .event(request.getEvent().getId())
+                .created(request.getCreated().format(formatter))
                 .status(request.getStatus())
                 .build();
     }

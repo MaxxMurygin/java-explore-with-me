@@ -30,10 +30,15 @@ public class DefaultCompilationService implements CompilationService {
     @Override
     @Transactional
     public CompilationDto create(NewCompilationDto newCompilationDto) {
+        List<Event> eventList = new ArrayList<>();
+
         if (newCompilationDto.getPinned() == null) {
             newCompilationDto.setPinned(false);
         }
-        List<Event> eventList = eventRepository.findByIdIn(newCompilationDto.getEvents());
+        if (newCompilationDto.getEvents() != null) {
+            eventList = eventRepository.findByIdIn(newCompilationDto.getEvents());
+        }
+
         Compilation newCompilation = Compilation.builder()
                 .title(newCompilationDto.getTitle())
                 .pinned(newCompilationDto.getPinned())

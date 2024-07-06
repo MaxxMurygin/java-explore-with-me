@@ -20,6 +20,7 @@ import ru.practicum.ewm.repository.EventRequestRepository;
 import ru.practicum.ewm.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,6 +68,7 @@ public class DefaultRequestService implements RequestService {
             eventRepository.save(event);
         }
         log.info("Create request: " + request);
+        log.info("UserId: " + userId + " EventId: " + eventId);
         return ParticipationRequestMapper.toDto(requestRepository.save(request));
     }
 
@@ -80,7 +82,7 @@ public class DefaultRequestService implements RequestService {
                 .orElseThrow(() -> new NotFoundException(EventRequest.class,
                         String.format(" with id=%d ", requestId)));
 
-        request.setStatus(EventRequestStatus.REJECTED);
+        request.setStatus(EventRequestStatus.CANCELED);
         requestRepository.save(request);
 
         return ParticipationRequestMapper.toDto(request);
@@ -123,8 +125,9 @@ public class DefaultRequestService implements RequestService {
                                                        EventRequestStatusUpdateRequest request) {
         List<EventRequest> eventRequests;
         List<Long> requestsIds = request.getRequestsIds();
-        log.info("Update request: " + request + " initiatorId: " + initiatorId + " eventId:" + eventId);
 
+
+        log.info("Update request service: " + request + " initiatorId: " + initiatorId + " eventId:" + eventId);
 
         if (requestsIds == null) {
             eventRequests = requestRepository.findAllByEventId(eventId);
@@ -141,7 +144,6 @@ public class DefaultRequestService implements RequestService {
                         String.format(" with id=%d ", eventId)));
         Integer limit = event.getParticipantLimit();
         Long confirmed = event.getConfirmedRequests();
-            log.info("Stored event: \n" + event);
 
         for (EventRequest er: eventRequests) {
             if (confirmed < limit) {
@@ -152,11 +154,12 @@ public class DefaultRequestService implements RequestService {
                     }
 
                 } else {
-                    throw new ValidationException(EventRequest.class,
-                            "Можно изменить только ожидающую заявку.");
+                    throw new ValidationException(
+                            EventRequest.class, "Можно изменить только ожидающую заявку.");
                 }
             } else {
-                throw new ValidationException(EventRequest.class, "Достигнут лимит участников.");
+                throw new ValidationException(
+                        EventRequest.class, "Достигнут лимит участников.");
             }
         }
 

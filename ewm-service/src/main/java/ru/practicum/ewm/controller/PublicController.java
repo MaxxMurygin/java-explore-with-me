@@ -31,16 +31,17 @@ public class PublicController {
     private final StatsClient statsClient;
 
     @GetMapping("/events")
-    public List<EventDtoShort> getAllEvents(@RequestParam(name = "text", required = false) String text,
-                                    @RequestParam(name = "categories", required = false) Long[] categoriesIds,
-                                    @RequestParam(name = "paid", required = false) Boolean paid,
-                                    @RequestParam(name = "rangeStart", required = false) String start,
-                                    @RequestParam(name = "rangeEnd", required = false) String end,
-                                    @RequestParam(name = "onlyAvailable", defaultValue = "false") Boolean onlyAvailable,
-                                    @RequestParam(name = "sort", required = false) String sort,
-                                    @RequestParam(name = "from", defaultValue = "0") Integer from,
-                                    @RequestParam(name = "size", defaultValue = "10") Integer size,
-                                    HttpServletRequest request) {
+    public List<EventDtoShort> getAllEvents(
+            @RequestParam(name = "text", required = false) String text,
+            @RequestParam(name = "categories", required = false) Long[] categoriesIds,
+            @RequestParam(name = "paid", required = false) Boolean paid,
+            @RequestParam(name = "rangeStart", required = false) String rangeStart,
+            @RequestParam(name = "rangeEnd", required = false) String rangeEnd,
+            @RequestParam(name = "onlyAvailable", defaultValue = "false") Boolean onlyAvailable,
+            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "from", defaultValue = "0") Integer from,
+            @RequestParam(name = "size", defaultValue = "10") Integer size,
+            HttpServletRequest request) {
 
         Sort order;
         if (sort != null) {
@@ -55,15 +56,18 @@ public class PublicController {
             order = Sort.by("id").ascending();
         }
         Pageable userPage = PageRequest.of(from / size, size, order);
-        List<EventDtoShort> events = eventService.findAllByParams(text, categoriesIds, paid,
-                                                                start, end, onlyAvailable, userPage);
+
+
+        List<EventDtoShort> events = eventService.findAllByParams(
+                text, categoriesIds, paid, rangeStart, rangeEnd, onlyAvailable, userPage);
         statsClient.post("ewm-service", request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
         return events;
     }
 
     @GetMapping("/events/{eventId}")
-    public EventDtoFull getEvent(@PathVariable(name = "eventId") @Positive Long eventId,
-                                 HttpServletRequest request) {
+    public EventDtoFull getEvent(
+            @PathVariable(name = "eventId") @Positive Long eventId,
+            HttpServletRequest request) {
         EventDtoFull event = eventService.findById(eventId);
 
         statsClient.post("ewm-service", request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
@@ -71,10 +75,11 @@ public class PublicController {
     }
 
     @GetMapping("/categories")
-    public List<CategoryDto> findCategories(@RequestParam(name = "from", defaultValue = "0") Integer from,
-                                            @RequestParam(name = "size", defaultValue = "10") Integer size) {
+    public List<CategoryDto> findCategories(
+            @RequestParam(name = "from", defaultValue = "0") Integer from,
+            @RequestParam(name = "size", defaultValue = "10") Integer size) {
 
-        Pageable userPage = PageRequest.of(from, size, Sort.by("id").ascending());
+        Pageable userPage = PageRequest.of(from, size, Sort.by("id").descending());
         return categoryService.findAll(userPage);
     }
 
@@ -84,9 +89,10 @@ public class PublicController {
     }
 
     @GetMapping("/compilations")
-    public List<CompilationDto> findCompilations(@RequestParam(name = "pinned", defaultValue = "false") Boolean pinned,
-                                                 @RequestParam(name = "from", defaultValue = "0") Integer from,
-                                                 @RequestParam(name = "size", defaultValue = "10") Integer size) {
+    public List<CompilationDto> findCompilations(
+            @RequestParam(name = "pinned", defaultValue = "false") Boolean pinned,
+            @RequestParam(name = "from", defaultValue = "0") Integer from,
+            @RequestParam(name = "size", defaultValue = "10") Integer size) {
 
         Pageable userPage = PageRequest.of(from, size, Sort.by("id").ascending());
         return compilationService.findAll(pinned, userPage);

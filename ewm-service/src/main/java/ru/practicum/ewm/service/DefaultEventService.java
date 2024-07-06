@@ -26,6 +26,8 @@ import ru.practicum.ewm.repository.EventRepository;
 import ru.practicum.ewm.repository.UserRepository;
 
 import javax.persistence.criteria.Predicate;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -127,10 +129,12 @@ public class DefaultEventService implements EventService {
         if (changedEventDto.getTitle() != null) {
             stored.setTitle(changedEventDto.getTitle());
         }
-        if (changedEventDto.getStateAction().equals(EventStateUserAction.CANCEL_REVIEW)) {
-            stored.setState(EventState.CANCELED);
-        } else {
-            stored.setState(EventState.PENDING);
+        if (changedEventDto.getStateAction() != null) {
+            if (changedEventDto.getStateAction().equals(EventStateUserAction.CANCEL_REVIEW)) {
+                stored.setState(EventState.CANCELED);
+            } else {
+                stored.setState(EventState.PENDING);
+            }
         }
 
         return EventMapper.toEventDtoFull(eventRepository.save(stored));
@@ -143,7 +147,6 @@ public class DefaultEventService implements EventService {
         Event stored = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(Event.class,
                         String.format(" with id=%d ", eventId)));
-        log.info(stored.toString());
 
         if (stored.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
             throw new ValidationException(Event.class,
@@ -217,11 +220,36 @@ public class DefaultEventService implements EventService {
     }
 
     @Override
-    public List<EventDtoFull> findAllByParams(Long[] usersIds, String[] states, Long[] categoriesIds,
-                                              String start, String end, Pageable pageable) {
+    public List<EventDtoFull> findAllByParams(
+            Long[] usersIds, String[] states, Long[] categoriesIds,
+            String rangeStart, String rangeEnd, Pageable pageable) {
+        List<User> userList = new ArrayList<>();
+        List<Category> categoryList = new ArrayList<>();
 
-        List<Category> categoryList = categoryRepository.findByIdIn(Arrays.asList(categoriesIds));
-        List<User> userList = userRepository.findByIdIn(Arrays.asList(usersIds));
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        if (rangeStart == null && rangeEnd == null) {
+            start = LocalDateTime.now();
+        }
+        if (rangeStart != null) {
+            start = LocalDateTime.parse(URLDecoder.decode(rangeStart, StandardCharsets.UTF_8), formatter);
+        }
+        if (rangeEnd != null) {
+            end = LocalDateTime.parse(URLDecoder.decode(rangeEnd, StandardCharsets.UTF_8), formatter);
+        }
+        if (start != null && end != null) {
+            if (end.isBefore(start)) {
+                throw new BadRequestException("Дата начала не может быть позже даты окончания события.");
+            }
+        }
+        if (usersIds != null) {
+            userList = userRepository.findByIdIn(Arrays.asList(usersIds));
+        }
+        if (categoriesIds != null) {
+            categoryList = categoryRepository.findByIdIn(Arrays.asList(categoriesIds));
+        }
+
         List<Event> eventList = eventRepository.findAll(getAdminQuery(userList, states, categoryList, start, end),
                 pageable).toList();
 
@@ -231,10 +259,13 @@ public class DefaultEventService implements EventService {
     }
 
     @Override
-    public List<EventDtoShort> findAllByParams(String text, Long[] categoriesIds, Boolean paid,
-                                               String rangeStart, String rangeEnd, Boolean onlyAvailable, Pageable pageable) {
+    public List<EventDtoShort> findAllByParams(
+            String text, Long[] categoriesIds, Boolean paid, String rangeStart,
+            String rangeEnd, Boolean onlyAvailable, Pageable pageable) {
         LocalDateTime start = null;
         LocalDateTime end = null;
+
+        log.info("Service: {} {} {} {} {} {}", text, categoriesIds, paid, rangeStart, rangeEnd, onlyAvailable);
 
         if (rangeStart == null && rangeEnd == null) {
             start = LocalDateTime.now();
@@ -292,7 +323,7 @@ public class DefaultEventService implements EventService {
     }
 
     private Specification<Event> getAdminQuery(List<User> userList, String[] states, List<Category> categoryList,
-                                               String start, String end) {
+                                               LocalDateTime start, LocalDateTime end) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -310,12 +341,10 @@ public class DefaultEventService implements EventService {
                 predicates.add(criteriaBuilder.in(root.get("category")).value(categoryList));
             }
             if (start != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"),
-                        LocalDateTime.parse(start, formatter)));
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"),start));
             }
             if (end != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"),
-                        LocalDateTime.parse(end, formatter)));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), end));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
@@ -328,8 +357,10 @@ public class DefaultEventService implements EventService {
             List<Predicate> predicates = new ArrayList<>();
 
             if (text != null) {
-                predicates.add(criteriaBuilder.like(root.get("annotation"), text));
-                predicates.add(criteriaBuilder.like(root.get("description"), text));
+                Predicate textPredicate = criteriaBuilder.or(
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("annotation")), text.toLowerCase()),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), text.toLowerCase()));
+                        predicates.add(textPredicate);
             }
             if (!categoryList.isEmpty()) {
                 predicates.add(criteriaBuilder.in(root.get("category")).value(categoryList));

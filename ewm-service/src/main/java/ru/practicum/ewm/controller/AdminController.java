@@ -14,7 +14,6 @@ import ru.practicum.ewm.dto.compilation.NewCompilationDto;
 import ru.practicum.ewm.dto.compilation.UpdateCompilationRequest;
 import ru.practicum.ewm.dto.event.EventDtoFull;
 import ru.practicum.ewm.dto.event.UpdateEventAdminRequest;
-import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
 import ru.practicum.ewm.dto.user.NewUserRequest;
 import ru.practicum.ewm.dto.user.UserDto;
 import ru.practicum.ewm.service.CategoryService;
@@ -23,8 +22,6 @@ import ru.practicum.ewm.service.EventService;
 import ru.practicum.ewm.service.UserService;
 
 import javax.validation.Valid;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @RestController
@@ -38,9 +35,10 @@ public class AdminController {
     private final CompilationService compilationService;
 
     @GetMapping("/users")
-    public List<UserDto> findUsers(@RequestParam(name = "ids", required = false) Long[] ids,
-                              @RequestParam(name = "from", defaultValue = "0") Integer from,
-                              @RequestParam(name = "size", defaultValue = "10") Integer size) {
+    public List<UserDto> findUsers(
+            @RequestParam(name = "ids", required = false) Long[] ids,
+            @RequestParam(name = "from", defaultValue = "0") Integer from,
+            @RequestParam(name = "size", defaultValue = "10") Integer size) {
 
         if (ids != null) {
             return userService.findByIds(ids);
@@ -60,8 +58,6 @@ public class AdminController {
     @DeleteMapping("/users/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeUser(@PathVariable Long id) {
-        log.info("Запрос на удаление пользователя с id = {}", id);
-
         userService.remove(id);
     }
 
@@ -81,8 +77,9 @@ public class AdminController {
     }
 
     @PatchMapping("/categories/{id}")
-    public CategoryDto updateCategory(@PathVariable Long id,
-                                      @Valid @RequestBody NewCategoryDto newCategoryDto) {
+    public CategoryDto updateCategory(
+            @PathVariable Long id,
+            @Valid @RequestBody NewCategoryDto newCategoryDto) {
         log.info("Запрос на изменение категории с id = {}", id);
 
         return categoryService.update(id, newCategoryDto);
@@ -98,33 +95,15 @@ public class AdminController {
                                            @RequestParam(name = "size", defaultValue = "10") Integer size) {
 
         Pageable userPage = PageRequest.of(from / size, size, Sort.by("eventDate").ascending());
-        if (start != null) {
-            start = URLDecoder.decode(start, StandardCharsets.UTF_8);
-        }
-        if (end != null) {
-            end = URLDecoder.decode(end, StandardCharsets.UTF_8);
-        }
-        if (usersIds.length == 1 && usersIds[0] == 0) {
-            usersIds = null;
-        }
-        if (categoriesIds.length == 1 && categoriesIds[0] == 0) {
-            categoriesIds = null;
-        }
+
         log.info("Admin get all events: {} {} {} {} {}", usersIds, states, categoriesIds, start, end);
-        List<EventDtoFull> result = eventService.findAllByParams(usersIds, states, categoriesIds, start, end, userPage);
-        log.info("Rez: " + result);
-        return result;
+        return eventService.findAllByParams(usersIds, states, categoriesIds, start, end, userPage);
     }
 
     @PatchMapping("/events/{eventId}")
     public EventDtoFull patchEvent (@PathVariable(name = "eventId") Long eventId,
                                     @Valid @RequestBody UpdateEventAdminRequest changedEventDto) {
-        log.info("Admin patch eventId:" + eventId);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+
         return eventService.update(eventId, changedEventDto);
     }
 
@@ -136,10 +115,11 @@ public class AdminController {
     }
 
     @PatchMapping("/compilations/{compId}")
-    public void updateCompilation(@PathVariable(name = "compId") Long compId,
-                                  @Valid @RequestBody UpdateCompilationRequest updatedCompilationDto) {
+    public CompilationDto updateCompilation(
+            @PathVariable(name = "compId") Long compId,
+            @Valid @RequestBody UpdateCompilationRequest updatedCompilationDto) {
 
-        compilationService.update(compId, updatedCompilationDto);
+        return compilationService.update(compId, updatedCompilationDto);
     }
 
     @DeleteMapping("/compilations/{compId}")
