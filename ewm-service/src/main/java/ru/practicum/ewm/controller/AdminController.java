@@ -11,6 +11,7 @@ import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.category.NewCategoryDto;
 import ru.practicum.ewm.dto.compilation.CompilationDto;
 import ru.practicum.ewm.dto.compilation.NewCompilationDto;
+import ru.practicum.ewm.dto.compilation.UpdateCompilationRequest;
 import ru.practicum.ewm.dto.event.EventDtoFull;
 import ru.practicum.ewm.dto.event.UpdateEventAdminRequest;
 import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
@@ -109,13 +110,21 @@ public class AdminController {
         if (categoriesIds.length == 1 && categoriesIds[0] == 0) {
             categoriesIds = null;
         }
-        log.info("{} {} {} {} {}", usersIds, states, categoriesIds, start, end);
-        return eventService.findAllByParams(usersIds, states, categoriesIds, start, end, userPage);
+        log.info("Admin get all events: {} {} {} {} {}", usersIds, states, categoriesIds, start, end);
+        List<EventDtoFull> result = eventService.findAllByParams(usersIds, states, categoriesIds, start, end, userPage);
+        log.info("Rez: " + result);
+        return result;
     }
 
     @PatchMapping("/events/{eventId}")
     public EventDtoFull patchEvent (@PathVariable(name = "eventId") Long eventId,
                                     @Valid @RequestBody UpdateEventAdminRequest changedEventDto) {
+        log.info("Admin patch eventId:" + eventId);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         return eventService.update(eventId, changedEventDto);
     }
 
@@ -124,5 +133,19 @@ public class AdminController {
     public CompilationDto createCompilation(@Valid @RequestBody NewCompilationDto newCompilationDto) {
 
         return compilationService.create(newCompilationDto);
+    }
+
+    @PatchMapping("/compilations/{compId}")
+    public void updateCompilation(@PathVariable(name = "compId") Long compId,
+                                  @Valid @RequestBody UpdateCompilationRequest updatedCompilationDto) {
+
+        compilationService.update(compId, updatedCompilationDto);
+    }
+
+    @DeleteMapping("/compilations/{compId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeCompilation(@PathVariable(name = "compId") Long compId) {
+
+        compilationService.remove(compId);
     }
 }

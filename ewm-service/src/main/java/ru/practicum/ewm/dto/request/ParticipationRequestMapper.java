@@ -11,8 +11,8 @@ public class ParticipationRequestMapper {
     public static ParticipationRequestDto toDto(EventRequest request) {
         return ParticipationRequestDto.builder()
                 .id(request.getId())
-                .requesterId(request.getRequesterId())
-                .eventId(request.getEventId())
+                .requesterId(request.getRequester().getId())
+                .eventId(request.getEvent().getId())
                 .created(request.getCreated())
                 .status(request.getStatus())
                 .build();

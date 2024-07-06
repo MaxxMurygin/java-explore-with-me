@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.ewm.exception.AlreadyExistException;
+import ru.practicum.ewm.exception.BadRequestException;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.model.ApiError;
@@ -62,7 +63,8 @@ public class ErrorHandler {
 //        return new ErrorResponse(e.getMessage());
 //    }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, NumberFormatException.class})
+    @ExceptionHandler({MethodArgumentNotValidException.class, NumberFormatException.class,
+            BadRequestException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleOtherException(final Exception e) {
         log.debug(e.getMessage());

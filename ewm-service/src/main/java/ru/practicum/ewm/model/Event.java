@@ -28,11 +28,13 @@ public class Event {
     @NotBlank
     private String title;
     @NotNull
-    @Column(name = "category_id")
-    private Long categoryId;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "category_id", referencedColumnName = "id")
+    private Category category;
     @NotNull
-    @Column(name = "initiator_id")
-    private Long initiatorId;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "initiator_id", referencedColumnName = "id")
+    private User initiator;
     @Column(name = "confirmed_requests")
     private Long confirmedRequests;
     private Long views;

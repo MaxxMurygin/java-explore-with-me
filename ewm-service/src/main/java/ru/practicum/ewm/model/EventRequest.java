@@ -21,11 +21,13 @@ public class EventRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotNull
-    @Column(name = "event_id")
-    private Long eventId;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "event_id", referencedColumnName = "id")
+    private Event event;
     @NotNull
-    @Column(name = "requester_id")
-    private Long requesterId;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "requester_id", referencedColumnName = "id")
+    private User requester;
     @NotNull
     @Column(name = "created_on")
     private LocalDateTime created;

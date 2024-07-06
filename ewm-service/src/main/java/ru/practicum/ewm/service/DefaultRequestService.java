@@ -1,9 +1,7 @@
 package ru.practicum.ewm.service;
 
-import com.sun.jdi.request.EventRequestManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.dto.request.EventRequestStatusUpdateRequest;
@@ -37,7 +35,7 @@ public class DefaultRequestService implements RequestService {
     @Override
     @Transactional
     public ParticipationRequestDto create(Long userId, Long eventId) {
-        userRepository.findById(userId)
+        User requester = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", userId)));
         Event event = eventRepository.findById(eventId)
@@ -47,7 +45,7 @@ public class DefaultRequestService implements RequestService {
         if (requestRepository.findByRequesterIdAndEventId(userId, eventId) != null) {
             throw new ValidationException(EventRequest.class, "Заявка на участие уже существует.");
         }
-        if (userId.equals(event.getInitiatorId())) {
+        if (userId.equals(event.getInitiator().getId())) {
             throw new ValidationException(EventRequest.class, "Нельзя подавать заявку на участие в своем мероприятии.");
         }
         if (!event.getState().equals(EventState.PUBLISHED)) {
@@ -59,8 +57,8 @@ public class DefaultRequestService implements RequestService {
         }
         EventRequest request = EventRequest.builder()
                 .created(LocalDateTime.now())
-                .requesterId(userId)
-                .eventId(eventId)
+                .requester(requester)
+                .event(event)
                 .status(EventRequestStatus.PENDING)
                 .build();
         if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
@@ -68,7 +66,7 @@ public class DefaultRequestService implements RequestService {
             event.setConfirmedRequests(event.getConfirmedRequests() + 1);
             eventRepository.save(event);
         }
-
+        log.info("Create request: " + request);
         return ParticipationRequestMapper.toDto(requestRepository.save(request));
     }
 
@@ -109,7 +107,7 @@ public class DefaultRequestService implements RequestService {
                 .orElseThrow(() -> new NotFoundException(Event.class,
                         String.format(" with id=%d ", eventId)));
 
-        if (!event.getInitiatorId().equals(initiatorId)) {
+        if (!event.getInitiator().getId().equals(initiatorId)) {
             throw new ValidationException(EventRequest.class, "Нельзя просматривать запросы не ко своим событиям.");
         }
 
@@ -120,15 +118,16 @@ public class DefaultRequestService implements RequestService {
     }
 
     @Override
+    @Transactional
     public EventRequestStatusUpdateResult updateStatus(Long initiatorId, Long eventId,
                                                        EventRequestStatusUpdateRequest request) {
         List<EventRequest> eventRequests;
         List<Long> requestsIds = request.getRequestsIds();
+        log.info("Update request: " + request + " initiatorId: " + initiatorId + " eventId:" + eventId);
+
 
         if (requestsIds == null) {
-            log.info(request.toString());
             eventRequests = requestRepository.findAllByEventId(eventId);
-//            throw new ValidationException(EventRequest.class, "Список заявок пуст.");
         } else {
             eventRequests = requestRepository.findAllById(requestsIds);
         }
@@ -142,6 +141,7 @@ public class DefaultRequestService implements RequestService {
                         String.format(" with id=%d ", eventId)));
         Integer limit = event.getParticipantLimit();
         Long confirmed = event.getConfirmedRequests();
+            log.info("Stored event: \n" + event);
 
         for (EventRequest er: eventRequests) {
             if (confirmed < limit) {
@@ -159,8 +159,11 @@ public class DefaultRequestService implements RequestService {
                 throw new ValidationException(EventRequest.class, "Достигнут лимит участников.");
             }
         }
+
         event.setConfirmedRequests(confirmed);
+        log.info("Updated event: \n" + event);
         eventRepository.save(event);
+
         requestRepository.saveAll(eventRequests);
 
         return ParticipationRequestMapper.toResult(eventRequests);

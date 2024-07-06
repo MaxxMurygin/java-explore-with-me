@@ -1,9 +1,11 @@
 package ru.practicum.ewm.dto.compilation;
 
 import ru.practicum.ewm.dto.event.EventDtoShort;
+import ru.practicum.ewm.dto.event.EventMapper;
 import ru.practicum.ewm.model.Compilation;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CompilationMapper {
     public static Compilation fromNewCompilationDto(NewCompilationDto newCompilationDto) {
@@ -13,12 +15,15 @@ public class CompilationMapper {
                 .build();
     }
 
-    public static CompilationDto toCompilationDto(Compilation compilation, List<EventDtoShort> events) {
+    public static CompilationDto toCompilationDto(Compilation compilation) {
         return CompilationDto.builder()
                 .id(compilation.getId())
                 .pinned(compilation.getPinned())
                 .title(compilation.getTitle())
-                .events(events)
+                .events(compilation.getEvents()
+                        .stream()
+                        .map(EventMapper::toEventDtoShort)
+                        .collect(Collectors.toList()))
                 .build();
     }
 }

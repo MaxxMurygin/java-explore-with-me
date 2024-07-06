@@ -79,6 +79,11 @@ public class PrivateController {
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createEventRequest(@PathVariable(name = "userId") @Positive Long userId,
                                                       @RequestParam(name = "eventId") Long eventId) {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         return requestService.create(userId, eventId);
     }
 

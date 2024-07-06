@@ -3,9 +3,13 @@ package ru.practicum.ewm.dto.event;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.common.EwmDateFormatter;
 import ru.practicum.ewm.dto.category.CategoryDto;
+import ru.practicum.ewm.dto.category.CategoryMapper;
 import ru.practicum.ewm.dto.user.UserDtoShort;
+import ru.practicum.ewm.dto.user.UserMapper;
+import ru.practicum.ewm.model.Category;
 import ru.practicum.ewm.model.Event;
 import ru.practicum.ewm.model.Location;
+import ru.practicum.ewm.model.User;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,11 +18,11 @@ import java.time.format.DateTimeFormatter;
 public class EventMapper {
     private static final DateTimeFormatter formatter = EwmDateFormatter.getFormatter();
 
-    public static Event fromNewEventDto(Long initiatorId, NewEventDto newEventDto) {
+    public static Event fromNewEventDto(User initiator, Category category, NewEventDto newEventDto) {
         return Event.builder()
-                .initiatorId(initiatorId)
+                .initiator(initiator)
                 .annotation(newEventDto.getAnnotation())
-                .categoryId(newEventDto.getCategory())
+                .category(category)
                 .description(newEventDto.getDescription())
                 .eventDate(LocalDateTime.parse(newEventDto.getEventDate(), formatter))
                 .locationLat(newEventDto.getLocation().getLat())
@@ -30,16 +34,16 @@ public class EventMapper {
                 .build();
     }
 
-    public static EventDtoFull toEventDtoFull(Event event, CategoryDto category, UserDtoShort initiator) {
+    public static EventDtoFull toEventDtoFull(Event event) {
         return EventDtoFull.builder()
                 .annotation(event.getAnnotation())
-                .category(category)
+                .category(CategoryMapper.toDto(event.getCategory()))
                 .confirmedRequests(event.getConfirmedRequests())
                 .createdOn(event.getCreatedOn().format(formatter))
                 .description(event.getDescription())
                 .eventDate(event.getEventDate().format(formatter))
                 .id(event.getId())
-                .initiator(initiator)
+                .initiator(UserMapper.toDtoShort(event.getInitiator()))
                 .location(new Location(event.getLocationLat(), event.getLocationLon()))
                 .paid(event.getPaid())
                 .participantLimit(event.getParticipantLimit())
@@ -51,14 +55,14 @@ public class EventMapper {
                 .build();
     }
 
-    public static EventDtoShort toEventDtoShort(Event event, CategoryDto category, UserDtoShort initiator) {
+    public static EventDtoShort toEventDtoShort(Event event) {
         return EventDtoShort.builder()
                 .annotation(event.getAnnotation())
-                .category(category)
+                .category(CategoryMapper.toDto(event.getCategory()))
                 .confirmedRequests(event.getConfirmedRequests())
                 .eventDate(event.getEventDate().format(formatter))
                 .id(event.getId())
-                .initiator(initiator)
+                .initiator(UserMapper.toDtoShort(event.getInitiator()))
                 .paid(event.getPaid())
                 .title(event.getTitle())
                 .views(event.getViews())

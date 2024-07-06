@@ -12,6 +12,7 @@ import ru.practicum.ewm.dto.category.CategoryMapper;
 import ru.practicum.ewm.dto.event.*;
 import ru.practicum.ewm.dto.user.UserDtoShort;
 import ru.practicum.ewm.dto.user.UserMapper;
+import ru.practicum.ewm.exception.BadRequestException;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.model.Category;
@@ -55,7 +56,7 @@ public class DefaultEventService implements EventService {
                 .orElseThrow(() -> new NotFoundException(Category.class,
                                                             String.format(" with id=%d ", categoryId)));
 
-        Event newEvent = EventMapper.fromNewEventDto(initiatorId, newEventDto);
+        Event newEvent = EventMapper.fromNewEventDto(initiator, category, newEventDto);
         newEvent.setCreatedOn(LocalDateTime.now());
         newEvent.setState(EventState.PENDING);
         newEvent.setPublishedOn(LocalDateTime.now());
@@ -72,13 +73,9 @@ public class DefaultEventService implements EventService {
             newEvent.setRequestModeration(true);
         }
         if (newEvent.getEventDate().isBefore(newEvent.getCreatedOn().plusHours(2))) {
-            throw new ValidationException(Event.class,
-                    "Событие должно начаться не ранее, чем через 2 часа после создания");
+            throw new BadRequestException("Событие должно начаться не ранее, чем через 2 часа после создания");
         }
-
-        return EventMapper.toEventDtoFull(eventRepository.save(newEvent),
-                CategoryMapper.toDto(category),
-                UserMapper.toDtoShort(initiator));
+        return EventMapper.toEventDtoFull(eventRepository.save(newEvent));
     }
 
     @Override
@@ -90,10 +87,6 @@ public class DefaultEventService implements EventService {
         Event stored = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(Event.class,
                         String.format(" with id=%d ", eventId)));
-        Long categoryId = stored.getCategoryId();
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException(Category.class,
-                        String.format(" with id=%d ", categoryId)));
 
         if (stored.getState().equals(EventState.PUBLISHED)) {
             throw new ValidationException(Event.class, "Нельзя изменить опубликованные события");
@@ -103,11 +96,11 @@ public class DefaultEventService implements EventService {
         }
         if (changedEventDto.getCategory() != null) {
             Long changedCategoryId = changedEventDto.getCategory();
-            category = categoryRepository.findById(changedCategoryId)
+            Category category = categoryRepository.findById(changedCategoryId)
                     .orElseThrow(() -> new NotFoundException(Category.class,
                             String.format(" with id=%d ", changedCategoryId)));
 
-            stored.setCategoryId(changedCategoryId);
+            stored.setCategory(category);
         }
         if (changedEventDto.getDescription() != null) {
             stored.setDescription(changedEventDto.getDescription());
@@ -116,8 +109,7 @@ public class DefaultEventService implements EventService {
             stored.setEventDate(LocalDateTime.parse(changedEventDto.getEventDate(), formatter));
         }
         if (stored.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ValidationException(Event.class,
-                    "Нельзя редактировать событие, менее чем за 2 часа до его начала");
+            throw new BadRequestException("Нельзя редактировать событие, менее чем за 2 часа до его начала");
         }
         if (changedEventDto.getLocation() != null) {
             stored.setLocationLat(changedEventDto.getLocation().getLat());
@@ -141,9 +133,7 @@ public class DefaultEventService implements EventService {
             stored.setState(EventState.PENDING);
         }
 
-        return EventMapper.toEventDtoFull(eventRepository.save(stored),
-                CategoryMapper.toDto(category),
-                UserMapper.toDtoShort(initiator));
+        return EventMapper.toEventDtoFull(eventRepository.save(stored));
     }
 
     @Override
@@ -155,38 +145,35 @@ public class DefaultEventService implements EventService {
                         String.format(" with id=%d ", eventId)));
         log.info(stored.toString());
 
-        Long initiatorId = stored.getInitiatorId();
-                User initiator = userRepository.findById(initiatorId)
-                .orElseThrow(() -> new NotFoundException(User.class,
-                        String.format(" with id=%d ", initiatorId)));
-        Long categoryId = stored.getCategoryId();
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException(Category.class,
-                        String.format(" with id=%d ", categoryId)));
         if (stored.getEventDate().isBefore(LocalDateTime.now().plusHours(1))) {
             throw new ValidationException(Event.class,
                     "Нельзя изменять событие, менее чем за 1 час до его начала");
         }
         stored.setPublishedOn(LocalDateTime.now());
-        if (changedEventDto.getStateAction().equals(EventStateAdminAction.PUBLISH_EVENT)) {
-            if (!stored.getState().equals(EventState.PENDING)) {
-                throw new ValidationException(Event.class,
-                        "Событие можно публиковать, только если оно в состоянии ожидания публикации.");
+        if (changedEventDto.getStateAction() != null) {
+            if (changedEventDto.getStateAction().equals(EventStateAdminAction.PUBLISH_EVENT)) {
+                if (!stored.getState().equals(EventState.PENDING)) {
+                    throw new ValidationException(Event.class,
+                            "Событие можно публиковать, только если оно в состоянии ожидания публикации.");
+                }
+                stored.setState(EventState.PUBLISHED);
+            } else {
+                if (stored.getState().equals(EventState.PUBLISHED)) {
+                    throw new ValidationException(Event.class,
+                            "Событие можно отклонить, только если оно еще не опубликовано.");
+                }
+                stored.setState(EventState.CANCELED);
             }
-            stored.setState(EventState.PUBLISHED);
-        } else {
-            if (stored.getState().equals(EventState.PUBLISHED)) {
-                throw new ValidationException(Event.class,
-                        "Событие можно отклонить, только если оно еще не опубликовано.");
-            }
-            stored.setState(EventState.CANCELED);
         }
-
         if (changedEventDto.getDescription() != null) {
             stored.setDescription(changedEventDto.getDescription());
         }
         if (changedEventDto.getEventDate() != null) {
-            stored.setEventDate(LocalDateTime.parse(changedEventDto.getEventDate(), formatter));
+            LocalDateTime eventDate = LocalDateTime.parse(changedEventDto.getEventDate(), formatter);
+            if (eventDate.isBefore(LocalDateTime.now())) {
+                throw new BadRequestException("Дата начала не может быть в прошлом.");
+            }
+            stored.setEventDate(eventDate);
         }
         if (changedEventDto.getLocation() != null) {
             stored.setLocationLat(changedEventDto.getLocation().getLat());
@@ -205,123 +192,90 @@ public class DefaultEventService implements EventService {
             stored.setTitle(changedEventDto.getTitle());
         }
 
-        return EventMapper.toEventDtoFull(eventRepository.save(stored),
-                CategoryMapper.toDto(category),
-                UserMapper.toDtoShort(initiator));
+        return EventMapper.toEventDtoFull(eventRepository.save(stored));
     }
 
     @Override
     public List<EventDtoFull> findAllByUser(Long userId, Pageable pageable) {
-        User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", userId)));
         List<Event> eventList = eventRepository.findAllByInitiatorId(userId,pageable);
-        List<Long> categoryIds = eventList.stream()
-                .map(Event::getCategoryId)
-                .collect(Collectors.toList());
-        Map<Long, CategoryDto> categoryMap = categoryRepository.findByIdIn(categoryIds).stream()
-                .map(CategoryMapper::toDto)
-                .collect(Collectors.toMap(CategoryDto::getId, c -> c));
 
         return eventList.stream()
-                .map(e -> EventMapper.toEventDtoFull(e,
-                        categoryMap.get(e.getCategoryId()),
-                        UserMapper.toDtoShort(user)))
+                .map(EventMapper::toEventDtoFull)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<EventDtoShort> findAllByIds(List<Long> eventsIds) {
         List<Event> eventList = eventRepository.findByIdIn(eventsIds);
-        List<Long> categoryIds = eventList.stream()
-                .map(Event::getCategoryId)
-                .collect(Collectors.toList());
-        Map<Long, CategoryDto> categoryMap = categoryRepository.findByIdIn(categoryIds).stream()
-                .map(CategoryMapper::toDto)
-                .collect(Collectors.toMap(CategoryDto::getId, c -> c));
-        List<Long> initiatorsIds = eventList.stream()
-                .map(Event::getInitiatorId)
-                .collect(Collectors.toList());
-        Map<Long, UserDtoShort> ininiatorsMap = userRepository.findByIdIn(initiatorsIds).stream()
-                .map(UserMapper::toDtoShort)
-                .collect(Collectors.toMap(UserDtoShort::getId, u -> u));
 
         return eventList.stream()
-                .map(e -> EventMapper.toEventDtoShort(e,
-                        categoryMap.get(e.getCategoryId()),
-                        ininiatorsMap.get(e.getInitiatorId())))
+                .map(EventMapper::toEventDtoShort)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<EventDtoFull> findAllByParams(Long[] usersIds, String[] states, Long[] categoriesIds,
                                               String start, String end, Pageable pageable) {
-        List<Event> eventList = eventRepository.findAll(getAdminQuery(usersIds, states, categoriesIds, start, end),
-                pageable).toList();
-        List<Long> categoryIds = eventList.stream()
-                .map(Event::getCategoryId)
-                .collect(Collectors.toList());
-        Map<Long, CategoryDto> categoryMap = categoryRepository.findByIdIn(categoryIds).stream()
-                .map(CategoryMapper::toDto)
-                .collect(Collectors.toMap(CategoryDto::getId, c -> c));
-        List<Long> initiatorsIds = eventList.stream()
-                .map(Event::getInitiatorId)
-                .collect(Collectors.toList());
-        Map<Long, UserDtoShort> ininiatorsMap = userRepository.findByIdIn(initiatorsIds).stream()
-                .map(UserMapper::toDtoShort)
-                .collect(Collectors.toMap(UserDtoShort::getId, u -> u));
 
+        List<Category> categoryList = categoryRepository.findByIdIn(Arrays.asList(categoriesIds));
+        List<User> userList = userRepository.findByIdIn(Arrays.asList(usersIds));
+        List<Event> eventList = eventRepository.findAll(getAdminQuery(userList, states, categoryList, start, end),
+                pageable).toList();
 
         return eventList.stream()
-                .map(e -> EventMapper.toEventDtoFull(e,
-                        categoryMap.get(e.getCategoryId()),
-                        ininiatorsMap.get(e.getInitiatorId())))
+                .map(EventMapper::toEventDtoFull)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<EventDtoShort> findAllByParams(String text, Long[] categoriesIds, Boolean paid,
-                                               String start, String end, Boolean onlyAvailable, Pageable pageable) {
+                                               String rangeStart, String rangeEnd, Boolean onlyAvailable, Pageable pageable) {
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        if (rangeStart == null && rangeEnd == null) {
+            start = LocalDateTime.now();
+        }
+        if (rangeStart != null) {
+            start = LocalDateTime.parse(rangeStart, formatter);
+        }
+        if (rangeEnd != null) {
+            end = LocalDateTime.parse(rangeEnd, formatter);
+        }
+        if (start != null && end != null) {
+            if (end.isBefore(start)) {
+                throw new BadRequestException("Дата начала не может быть позже даты окончания события.");
+            }
+        }
+
+        List<Category> categoryList = null;
+        if (categoriesIds != null) {
+            categoryList = categoryRepository.findByIdIn(Arrays.asList(categoriesIds));
+        }
         List<Event> eventList = eventRepository
-                .findAll(getPublicQuery(text, categoriesIds, paid, start, end, onlyAvailable), pageable).toList();
-        List<Long> categoryIds = eventList.stream()
-                .map(Event::getCategoryId)
-                .collect(Collectors.toList());
-        Map<Long, CategoryDto> categoryMap = categoryRepository.findByIdIn(categoryIds).stream()
-                .map(CategoryMapper::toDto)
-                .collect(Collectors.toMap(CategoryDto::getId, c -> c));
-        List<Long> initiatorsIds = eventList.stream()
-                .map(Event::getInitiatorId)
-                .collect(Collectors.toList());
-        Map<Long, UserDtoShort> ininiatorsMap = userRepository.findByIdIn(initiatorsIds).stream()
-                .map(UserMapper::toDtoShort)
-                .collect(Collectors.toMap(UserDtoShort::getId, u -> u));
+                .findAll(getPublicQuery(text, categoryList, paid, start, end, onlyAvailable), pageable).toList();
 
         return eventList.stream()
-                .map(e -> EventMapper.toEventDtoShort(e,
-                        categoryMap.get(e.getCategoryId()),
-                        ininiatorsMap.get(e.getInitiatorId())))
+                .map(EventMapper::toEventDtoShort)
                 .collect(Collectors.toList());
     }
 
     @Override
     public EventDtoFull findByUser(Long userId, Long eventId) {
-        User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", userId)));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(Event.class,
                         String.format(" with id=%d ", eventId)));
-        if (!event.getInitiatorId().equals(userId)) {
+        if (!event.getInitiator().getId().equals(userId)) {
             throw new ValidationException(Event.class, "Полная информация доступна только создателю мероприятия.");
         }
 
-        Category category = categoryRepository.findById(event.getCategoryId())
-                .orElseThrow(() -> new NotFoundException(Category.class,
-                        String.format(" with id=%d ", event.getCategoryId())));
-        return EventMapper.toEventDtoFull(event,
-                CategoryMapper.toDto(category),
-                UserMapper.toDtoShort(user));
+        return EventMapper.toEventDtoFull(event);
     }
 
     @Override
@@ -332,27 +286,18 @@ public class DefaultEventService implements EventService {
         if (!stored.getState().equals(EventState.PUBLISHED)) {
             throw new NotFoundException(Event.class, "Событие не опубликовано.");
         }
-        Long initiatorId = stored.getInitiatorId();
-        User initiator = userRepository.findById(initiatorId)
-                .orElseThrow(() -> new NotFoundException(User.class,
-                        String.format(" with id=%d ", initiatorId)));
-        Long categoryId = stored.getCategoryId();
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException(Category.class,
-                        String.format(" with id=%d ", categoryId)));
         stored.setViews(stored.getViews() + 1);
-        return EventMapper.toEventDtoFull(stored,
-                CategoryMapper.toDto(category),
-                UserMapper.toDtoShort(initiator));
+
+        return EventMapper.toEventDtoFull(stored);
     }
 
-    private Specification<Event> getAdminQuery(Long[] usersIds, String[] states, Long[] categoriesIds,
+    private Specification<Event> getAdminQuery(List<User> userList, String[] states, List<Category> categoryList,
                                                String start, String end) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (usersIds != null) {
-                predicates.add(criteriaBuilder.in(root.get("initiatorId")).value(Arrays.asList(usersIds)));
+            if (!userList.isEmpty()) {
+                predicates.add(criteriaBuilder.in(root.get("initiator")).value(userList));
             }
             if (states != null) {
                 List<EventState> stateList = Arrays.stream(states)
@@ -361,8 +306,8 @@ public class DefaultEventService implements EventService {
 
                 predicates.add(criteriaBuilder.in(root.get("state")).value(stateList));
             }
-            if (categoriesIds != null) {
-                predicates.add(criteriaBuilder.in(root.get("categoryId")).value(Arrays.asList(categoriesIds)));
+            if (!categoryList.isEmpty()) {
+                predicates.add(criteriaBuilder.in(root.get("category")).value(categoryList));
             }
             if (start != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"),
@@ -377,8 +322,8 @@ public class DefaultEventService implements EventService {
         };
     }
 
-    private Specification<Event> getPublicQuery(String text,Long[] categoriesIds, Boolean paid,
-                                                String start, String end, Boolean onlyAvailable) {
+    private Specification<Event> getPublicQuery(String text, List<Category> categoryList, Boolean paid,
+                                                LocalDateTime start, LocalDateTime end, Boolean onlyAvailable) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -386,22 +331,17 @@ public class DefaultEventService implements EventService {
                 predicates.add(criteriaBuilder.like(root.get("annotation"), text));
                 predicates.add(criteriaBuilder.like(root.get("description"), text));
             }
-            if (categoriesIds != null) {
-                predicates.add(criteriaBuilder.in(root.get("categoryId")).value(Arrays.asList(categoriesIds)));
+            if (!categoryList.isEmpty()) {
+                predicates.add(criteriaBuilder.in(root.get("category")).value(categoryList));
             }
             if (paid != null) {
                 predicates.add(criteriaBuilder.equal(root.get("paid"), paid));
             }
             if (start != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"),
-                        LocalDateTime.parse(start, formatter)));
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), start));
             }
             if (end != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"),
-                        LocalDateTime.parse(end, formatter)));
-            }
-            if (start == null && end == null) {
-                predicates.add(criteriaBuilder.greaterThan(root.get("eventDate"), LocalDateTime.now()));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), end));
             }
             if (onlyAvailable) {
                 predicates.add(criteriaBuilder.lessThan(root.get("confirmedRequests"),
