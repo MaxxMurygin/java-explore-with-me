@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 public final class EwmDateFormatter {
 
     public static DateTimeFormatter getFormatter() {
+
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     }
 }
