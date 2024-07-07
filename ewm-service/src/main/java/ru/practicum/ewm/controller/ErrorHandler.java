@@ -37,8 +37,8 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler(
-            {AlreadyExistException.class, DataIntegrityViolationException.class,
+    @ExceptionHandler({
+            AlreadyExistException.class, DataIntegrityViolationException.class,
             ValidationException.class, ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleAlreadyExist(final RuntimeException e) {
@@ -52,8 +52,8 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler(
-            {MethodArgumentNotValidException.class, NumberFormatException.class,
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class, NumberFormatException.class,
             BadRequestException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleOtherException(final Exception e) {
