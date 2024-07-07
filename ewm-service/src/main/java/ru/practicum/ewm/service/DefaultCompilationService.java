@@ -30,6 +30,7 @@ public class DefaultCompilationService implements CompilationService {
     @Override
     @Transactional
     public CompilationDto create(NewCompilationDto newCompilationDto) {
+
         List<Event> eventList = new ArrayList<>();
 
         if (newCompilationDto.getPinned() == null) {
@@ -45,12 +46,14 @@ public class DefaultCompilationService implements CompilationService {
                 .events(new HashSet<>(eventList))
                 .build();
 
-        return CompilationMapper.toCompilationDto(compilationRepository.save(newCompilation));
+        return CompilationMapper.toCompilationDto(
+                compilationRepository.save(newCompilation));
     }
 
     @Override
     @Transactional
     public void remove(Long compilationId) {
+
         compilationRepository.findById(compilationId)
                 .orElseThrow(() -> new NotFoundException(Category.class,
                         String.format(" with id=%d ", compilationId)));
@@ -60,7 +63,9 @@ public class DefaultCompilationService implements CompilationService {
 
     @Override
     @Transactional
-    public CompilationDto update(Long compilationId, UpdateCompilationRequest changedCompilationDto) {
+    public CompilationDto update(
+            Long compilationId, UpdateCompilationRequest changedCompilationDto) {
+
         Compilation stored = compilationRepository.findById(compilationId)
                 .orElseThrow(() -> new NotFoundException(Category.class,
                         String.format(" with id=%d ", compilationId)));
@@ -103,7 +108,8 @@ public class DefaultCompilationService implements CompilationService {
 
     @Override
     public CompilationDto findById(Long compilationId) {
-        Compilation stored = compilationRepository.findById(compilationId)
+
+        compilationRepository.findById(compilationId)
                 .orElseThrow(() -> new NotFoundException(Category.class,
                         String.format(" with id=%d ", compilationId)));
 

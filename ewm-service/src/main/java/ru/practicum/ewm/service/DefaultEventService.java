@@ -45,6 +45,7 @@ public class DefaultEventService implements EventService {
     @Override
     @Transactional
     public EventDtoFull create(Long initiatorId, NewEventDto newEventDto) {
+
         Long categoryId = newEventDto.getCategory();
         User initiator = userRepository.findById(initiatorId)
                 .orElseThrow(() -> new NotFoundException(User.class,
@@ -78,6 +79,7 @@ public class DefaultEventService implements EventService {
     @Override
     @Transactional
     public EventDtoFull update(Long initiatorId, Long eventId, UpdateEventUserRequest changedEventDto) {
+
         userRepository.findById(initiatorId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", initiatorId)));
@@ -204,18 +206,19 @@ public class DefaultEventService implements EventService {
 
     @Override
     public List<EventDtoFull> findAllByUser(Long userId, Pageable pageable) {
+
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", userId)));
-        List<Event> eventList = eventRepository.findAllByInitiatorId(userId,pageable);
 
-        return eventList.stream()
+        return eventRepository.findAllByInitiatorId(userId,pageable).stream()
                 .map(EventMapper::toEventDtoFull)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<EventDtoShort> findAllByIds(List<Long> eventsIds) {
+
         List<Event> eventList = eventRepository.findByIdIn(eventsIds);
 
         return eventList.stream()
@@ -227,6 +230,7 @@ public class DefaultEventService implements EventService {
     public List<EventDtoFull> findAllByParams(
             Long[] usersIds, String[] states, Long[] categoriesIds,
             String rangeStart, String rangeEnd, Pageable pageable) {
+
         List<User> userList = new ArrayList<>();
         List<Category> categoryList = new ArrayList<>();
 
@@ -254,10 +258,11 @@ public class DefaultEventService implements EventService {
             categoryList = categoryRepository.findByIdIn(Arrays.asList(categoriesIds));
         }
 
-        List<Event> eventList = eventRepository.findAll(getAdminQuery(userList, states, categoryList, start, end),
-                pageable).toList();
-
-        return eventList.stream()
+        return eventRepository
+                .findAll(getAdminQuery(
+                        userList, states, categoryList, start, end),
+                        pageable).toList()
+                .stream()
                 .map(EventMapper::toEventDtoFull)
                 .collect(Collectors.toList());
     }
@@ -266,10 +271,9 @@ public class DefaultEventService implements EventService {
     public List<EventDtoShort> findAllByParams(
             String text, Long[] categoriesIds, Boolean paid, String rangeStart,
             String rangeEnd, Boolean onlyAvailable, Pageable pageable) {
+
         LocalDateTime start = null;
         LocalDateTime end = null;
-
-        log.info("Service: {} {} {} {} {} {}", text, categoriesIds, paid, rangeStart, rangeEnd, onlyAvailable);
 
         if (rangeStart == null && rangeEnd == null) {
             start = LocalDateTime.now();
@@ -290,16 +294,17 @@ public class DefaultEventService implements EventService {
         if (categoriesIds != null) {
             categoryList = categoryRepository.findByIdIn(Arrays.asList(categoriesIds));
         }
-        List<Event> eventList = eventRepository
-                .findAll(getPublicQuery(text, categoryList, paid, start, end, onlyAvailable), pageable).toList();
 
-        return eventList.stream()
+        return eventRepository
+                .findAll(getPublicQuery(text, categoryList, paid, start, end, onlyAvailable), pageable).toList()
+                .stream()
                 .map(EventMapper::toEventDtoShort)
                 .collect(Collectors.toList());
     }
 
     @Override
     public EventDtoFull findByUser(Long userId, Long eventId) {
+
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", userId)));
@@ -315,6 +320,7 @@ public class DefaultEventService implements EventService {
 
     @Override
     public EventDtoFull findById(Long eventId) {
+
         Event stored = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException(Event.class,
                         String.format(" with id=%d ", eventId)));
@@ -326,8 +332,10 @@ public class DefaultEventService implements EventService {
         return EventMapper.toEventDtoFull(stored);
     }
 
-    private Specification<Event> getAdminQuery(List<User> userList, String[] states, List<Category> categoryList,
-                                               LocalDateTime start, LocalDateTime end) {
+    private Specification<Event> getAdminQuery(
+            List<User> userList, String[] states, List<Category> categoryList,
+            LocalDateTime start, LocalDateTime end) {
+
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -355,8 +363,10 @@ public class DefaultEventService implements EventService {
         };
     }
 
-    private Specification<Event> getPublicQuery(String text, List<Category> categoryList, Boolean paid,
-                                                LocalDateTime start, LocalDateTime end, Boolean onlyAvailable) {
+    private Specification<Event> getPublicQuery(
+            String text, List<Category> categoryList, Boolean paid,
+            LocalDateTime start, LocalDateTime end, Boolean onlyAvailable) {
+
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -366,7 +376,7 @@ public class DefaultEventService implements EventService {
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), text.toLowerCase()));
                         predicates.add(textPredicate);
             }
-            if (!categoryList.isEmpty()) {
+            if (categoryList != null) {
                 predicates.add(criteriaBuilder.in(root.get("category")).value(categoryList));
             }
             if (paid != null) {

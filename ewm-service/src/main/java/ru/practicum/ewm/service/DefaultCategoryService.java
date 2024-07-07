@@ -29,19 +29,22 @@ public class DefaultCategoryService implements CategoryService {
     @Override
     @Transactional
     public CategoryDto create(NewCategoryDto newCategoryDto) {
+
         String name = newCategoryDto.getName();
 
-        if (categoryRepository.findByName(name).isPresent()) {
-            throw new AlreadyExistException(Category.class,
-                    String.format(" with name = %s ", name));
-        }
+//        if (categoryRepository.findByName(name).isPresent()) {
+//            throw new AlreadyExistException(Category.class,
+//                    String.format(" with name = %s ", name));
+//        }
 
-        return CategoryMapper.toDto(categoryRepository.save(CategoryMapper.fromNewCategoryDto(newCategoryDto)));
+        return CategoryMapper.toDto(
+                categoryRepository.save(CategoryMapper.fromNewCategoryDto(newCategoryDto)));
     }
 
     @Override
     @Transactional
     public void remove(Long categoryId) {
+
         categoryRepository.findById(categoryId)
                         .orElseThrow(() -> new NotFoundException(Category.class,
                                 String.format(" with id=%d ", categoryId)));
@@ -54,6 +57,7 @@ public class DefaultCategoryService implements CategoryService {
     @Override
     @Transactional
     public CategoryDto update(Long categoryId, NewCategoryDto newCategoryDto) {
+
         String name = newCategoryDto.getName();
 
         Category stored = categoryRepository.findById(categoryId)
@@ -68,18 +72,22 @@ public class DefaultCategoryService implements CategoryService {
         }
         stored.setName(name);
 
-        return CategoryMapper.toDto(categoryRepository.save(stored));
+        return CategoryMapper.toDto(
+                categoryRepository.save(stored));
     }
 
     @Override
     public List<CategoryDto> findAll(Pageable pageable) {
-        return categoryRepository.findAll(pageable).stream()
+
+        return categoryRepository.findAll(pageable)
+                .stream()
                 .map(CategoryMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public CategoryDto findById(Long categoryId) {
+
         return CategoryMapper.toDto(categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException(Category.class,
                         String.format(" with id=%d ", categoryId))));

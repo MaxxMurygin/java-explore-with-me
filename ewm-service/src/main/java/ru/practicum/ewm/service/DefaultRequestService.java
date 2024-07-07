@@ -35,6 +35,7 @@ public class DefaultRequestService implements RequestService {
     @Override
     @Transactional
     public ParticipationRequestDto create(Long userId, Long eventId) {
+
         User requester = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", userId)));
@@ -66,14 +67,14 @@ public class DefaultRequestService implements RequestService {
             event.setConfirmedRequests(event.getConfirmedRequests() + 1);
             eventRepository.save(event);
         }
-        log.info("Create request: " + request);
-        log.info("UserId: " + userId + " EventId: " + eventId);
+
         return ParticipationRequestMapper.toDto(requestRepository.save(request));
     }
 
     @Override
     @Transactional
     public ParticipationRequestDto cancel(Long userId, Long requestId) {
+
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", userId)));
@@ -89,6 +90,7 @@ public class DefaultRequestService implements RequestService {
 
     @Override
     public List<ParticipationRequestDto> getAllByRequesterId(Long userId) {
+
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", userId)));
@@ -101,6 +103,7 @@ public class DefaultRequestService implements RequestService {
 
     @Override
     public List<ParticipationRequestDto> getAllByInitiatorId(Long initiatorId, Long eventId) {
+
         userRepository.findById(initiatorId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", initiatorId)));
@@ -120,13 +123,12 @@ public class DefaultRequestService implements RequestService {
 
     @Override
     @Transactional
-    public EventRequestStatusUpdateResult updateStatus(Long initiatorId, Long eventId,
-                                                       EventRequestStatusUpdateRequest request) {
+    public EventRequestStatusUpdateResult updateStatus(
+            Long initiatorId, Long eventId,
+            EventRequestStatusUpdateRequest request) {
+
         List<EventRequest> eventRequests;
         List<Long> requestsIds = request.getRequestsIds();
-
-
-        log.info("Update request service: " + request + " initiatorId: " + initiatorId + " eventId:" + eventId);
 
         if (requestsIds == null) {
             eventRequests = requestRepository.findAllByEventId(eventId);
@@ -162,9 +164,7 @@ public class DefaultRequestService implements RequestService {
         }
 
         event.setConfirmedRequests(confirmed);
-        log.info("Updated event: \n" + event);
         eventRepository.save(event);
-
         requestRepository.saveAll(eventRequests);
 
         return ParticipationRequestMapper.toResult(eventRequests);
