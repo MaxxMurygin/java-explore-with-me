@@ -30,13 +30,6 @@ public class DefaultCategoryService implements CategoryService {
     @Transactional
     public CategoryDto create(NewCategoryDto newCategoryDto) {
 
-        String name = newCategoryDto.getName();
-
-//        if (categoryRepository.findByName(name).isPresent()) {
-//            throw new AlreadyExistException(Category.class,
-//                    String.format(" with name = %s ", name));
-//        }
-
         return CategoryMapper.toDto(
                 categoryRepository.save(CategoryMapper.fromNewCategoryDto(newCategoryDto)));
     }
