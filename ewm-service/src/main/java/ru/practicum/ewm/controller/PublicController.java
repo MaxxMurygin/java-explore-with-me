@@ -2,6 +2,7 @@ package ru.practicum.ewm.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,6 +30,7 @@ public class PublicController {
     private final CategoryService categoryService;
     private final CompilationService compilationService;
     private final StatsClient statsClient;
+    private static final String APP = "ewm-service";
 
     @GetMapping("/events")
     public List<EventDtoShort> getAllEvents(
@@ -60,7 +62,7 @@ public class PublicController {
 
         List<EventDtoShort> events = eventService.findAllByParams(
                 text, categoriesIds, paid, rangeStart, rangeEnd, onlyAvailable, userPage);
-        statsClient.post("ewm-service", request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
+        statsClient.post(APP, request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
         return events;
     }
 
@@ -69,8 +71,8 @@ public class PublicController {
             @PathVariable(name = "eventId") @Positive Long eventId,
             HttpServletRequest request) {
         EventDtoFull event = eventService.findById(eventId);
-
-        statsClient.post("ewm-service", request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
+        log.info("Public get eventId= {}, event={}", eventId, event);
+        statsClient.post(APP, request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
         return event;
     }
 

@@ -104,8 +104,10 @@ public class AdminController {
     public EventDtoFull patchEvent(
             @PathVariable(name = "eventId") Long eventId,
             @Valid @RequestBody UpdateEventAdminRequest changedEventDto) {
-
-        return eventService.update(eventId, changedEventDto);
+        log.info("Admin patch eventID={} event={}",eventId,changedEventDto);
+        EventDtoFull result = eventService.update(eventId, changedEventDto);
+        log.info("Result: {}", result);
+        return result;
     }
 
     @PostMapping("/compilations")

@@ -51,7 +51,10 @@ public class PrivateController {
     public EventDtoFull createEvent(
             @PathVariable(name = "userId") @Positive Long initiatorId,
             @Valid @RequestBody NewEventDto newEventDto) {
-        return eventService.create(initiatorId, newEventDto);
+        log.info("UserId={} create event: {}", initiatorId, newEventDto);
+        EventDtoFull result = eventService.create(initiatorId, newEventDto);
+        log.info("Result: " + result);
+        return result;
     }
 
     @PatchMapping("/{userId}/events/{eventId}")

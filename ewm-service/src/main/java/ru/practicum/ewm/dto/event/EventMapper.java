@@ -12,7 +12,6 @@ import ru.practicum.ewm.model.User;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-@Component
 public class EventMapper {
     private static final DateTimeFormatter formatter = EwmDateFormatter.getFormatter();
 

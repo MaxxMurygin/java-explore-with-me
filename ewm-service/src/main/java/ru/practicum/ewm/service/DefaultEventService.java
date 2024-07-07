@@ -78,7 +78,7 @@ public class DefaultEventService implements EventService {
     @Override
     @Transactional
     public EventDtoFull update(Long initiatorId, Long eventId, UpdateEventUserRequest changedEventDto) {
-        User initiator = userRepository.findById(initiatorId)
+        userRepository.findById(initiatorId)
                 .orElseThrow(() -> new NotFoundException(User.class,
                         String.format(" with id=%d ", initiatorId)));
         Event stored = eventRepository.findById(eventId)
@@ -96,7 +96,6 @@ public class DefaultEventService implements EventService {
             Category category = categoryRepository.findById(changedCategoryId)
                     .orElseThrow(() -> new NotFoundException(Category.class,
                             String.format(" with id=%d ", changedCategoryId)));
-
             stored.setCategory(category);
         }
         if (changedEventDto.getDescription() != null) {
@@ -147,7 +146,6 @@ public class DefaultEventService implements EventService {
             throw new ValidationException(Event.class,
                     "Нельзя изменять событие, менее чем за 1 час до его начала");
         }
-        stored.setPublishedOn(LocalDateTime.now());
         if (changedEventDto.getStateAction() != null) {
             if (changedEventDto.getStateAction().equals(EventStateAdminAction.PUBLISH_EVENT)) {
                 if (!stored.getState().equals(EventState.PENDING)) {
@@ -155,6 +153,7 @@ public class DefaultEventService implements EventService {
                             "Событие можно публиковать, только если оно в состоянии ожидания публикации.");
                 }
                 stored.setState(EventState.PUBLISHED);
+                stored.setPublishedOn(LocalDateTime.now());
             } else {
                 if (stored.getState().equals(EventState.PUBLISHED)) {
                     throw new ValidationException(Event.class,
