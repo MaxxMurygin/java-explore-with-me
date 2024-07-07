@@ -162,6 +162,16 @@ public class DefaultEventService implements EventService {
                 stored.setState(EventState.CANCELED);
             }
         }
+        if (changedEventDto.getAnnotation() != null) {
+            stored.setAnnotation(changedEventDto.getAnnotation());
+        }
+        if (changedEventDto.getCategory() != null) {
+            Long changedCategoryId = changedEventDto.getCategory();
+            Category category = categoryRepository.findById(changedCategoryId)
+                    .orElseThrow(() -> new NotFoundException(Category.class,
+                            String.format(" with id=%d ", changedCategoryId)));
+            stored.setCategory(category);
+        }
         if (changedEventDto.getDescription() != null) {
             stored.setDescription(changedEventDto.getDescription());
         }

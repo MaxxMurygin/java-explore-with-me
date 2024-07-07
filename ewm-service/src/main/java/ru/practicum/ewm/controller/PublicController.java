@@ -44,21 +44,26 @@ public class PublicController {
             @RequestParam(name = "size", defaultValue = "10") Integer size,
             HttpServletRequest request) {
 
-        Sort order;
+        log.info("Запрос на просмотр событий: text={}, categoriesIds={}, paid={}, rangeStart={}," +
+                        " rangeEnd={}, onlyAvailable={}, sort={}, from={}, size={}",
+                text, categoriesIds, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+
+        Sort order = Sort.by("id");
         if (sort != null) {
             SortBy sortBy = SortBy.valueOf(sort);
 
-            if (sortBy.equals(SortBy.VIEWS)) {
-                order = Sort.by("views").descending();
-            } else {
-                order = Sort.by("eventDate").ascending();
+            switch (sortBy) {
+                case VIEWS:
+                    order = Sort.by("views").descending();
+                    break;
+                case EVENT_DATE:
+                    order = Sort.by("eventDate").ascending();
+                    break;
+                default:
+                    order = Sort.by("id").ascending();
             }
-        } else {
-            order = Sort.by("id").ascending();
         }
         Pageable userPage = PageRequest.of(from / size, size, order);
-
-
         List<EventDtoShort> events = eventService.findAllByParams(
                 text, categoriesIds, paid, rangeStart, rangeEnd, onlyAvailable, userPage);
         statsClient.post(APP, request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
@@ -69,8 +74,10 @@ public class PublicController {
     public EventDtoFull getEvent(
             @PathVariable(name = "eventId") @Positive Long eventId,
             HttpServletRequest request) {
+
         EventDtoFull event = eventService.findById(eventId);
-        log.info("Public get eventId= {}, event={}", eventId, event);
+        log.info("Запрос на просмотр события eventId= {}", eventId);
+        log.debug("Event: {}", event);
         statsClient.post(APP, request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
         return event;
     }
@@ -81,11 +88,15 @@ public class PublicController {
             @RequestParam(name = "size", defaultValue = "10") Integer size) {
 
         Pageable userPage = PageRequest.of(from, size, Sort.by("id").descending());
+
+        log.info("Запрос на просмотр категорий: from={}, size={}", from, size);
         return categoryService.findAll(userPage);
     }
 
     @GetMapping("/categories/{catId}")
     public CategoryDto findCategories(@PathVariable(name = "catId") Long catId) {
+
+        log.info("Запрос на просмотр категории: catId={}", catId);
         return categoryService.findById(catId);
     }
 
@@ -96,11 +107,15 @@ public class PublicController {
             @RequestParam(name = "size", defaultValue = "10") Integer size) {
 
         Pageable userPage = PageRequest.of(from, size, Sort.by("id").ascending());
+
+        log.info("Запрос на просмотр подборок: pinned={}, from={}, size={}", pinned, from, size);
         return compilationService.findAll(pinned, userPage);
     }
 
     @GetMapping("/compilations/{compId}")
     public CompilationDto findCompilations(@PathVariable(name = "compId") Long compId) {
+
+        log.info("Запрос на просмотр подборки: compId={}", compId);
         return compilationService.findById(compId);
     }
 

@@ -40,11 +40,12 @@ public class AdminController {
             @RequestParam(name = "from", defaultValue = "0") Integer from,
             @RequestParam(name = "size", defaultValue = "10") Integer size) {
 
+        Pageable userPage = PageRequest.of(from, size, Sort.by("id").ascending());
+
+        log.info("Запрос на поиск пользователей: ids={}, from={}, size={}", ids, from, size);
         if (ids != null) {
             return userService.findByIds(ids);
         }
-
-        Pageable userPage = PageRequest.of(from, size, Sort.by("id").ascending());
         return userService.findAll(userPage);
     }
 
@@ -52,12 +53,16 @@ public class AdminController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto createUser(@Valid @RequestBody NewUserRequest newUserRequest) {
 
+        log.info("Запрос на создание пользователя.");
+        log.debug("newUserRequest={}", newUserRequest);
         return userService.create(newUserRequest);
     }
 
     @DeleteMapping("/users/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeUser(@PathVariable Long id) {
+
+        log.info("Запрос на удаление пользователя: id={}", id);
         userService.remove(id);
     }
 
@@ -65,14 +70,16 @@ public class AdminController {
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto createCategory(@Valid @RequestBody NewCategoryDto newCategoryDto) {
 
+        log.info("Запрос на создание категории.");
+        log.debug("newCategoryDto={}", newCategoryDto);
         return categoryService.create(newCategoryDto);
     }
 
     @DeleteMapping("/categories/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeCategory(@PathVariable Long id) {
-        log.info("Запрос на удаление категории с id = {}", id);
 
+        log.info("Запрос на удаление категории с id={}.", id);
         categoryService.remove(id);
     }
 
@@ -80,8 +87,9 @@ public class AdminController {
     public CategoryDto updateCategory(
             @PathVariable Long id,
             @Valid @RequestBody NewCategoryDto newCategoryDto) {
-        log.info("Запрос на изменение категории с id = {}", id);
 
+        log.info("Запрос на изменение категории с id={}", id);
+        log.debug("newCategoryDto={}", newCategoryDto);
         return categoryService.update(id, newCategoryDto);
     }
 
@@ -96,7 +104,8 @@ public class AdminController {
 
         Pageable userPage = PageRequest.of(from / size, size, Sort.by("eventDate").ascending());
 
-        log.info("Admin get all events: {} {} {} {} {}", usersIds, states, categoriesIds, start, end);
+        log.info("Запрос на вывод событий с параметрами: usersIds={}, states={}, categoriesIds={}, start={}, end={}",
+                usersIds, states, categoriesIds, start, start);
         return eventService.findAllByParams(usersIds, states, categoriesIds, start, end, userPage);
     }
 
@@ -104,16 +113,18 @@ public class AdminController {
     public EventDtoFull patchEvent(
             @PathVariable(name = "eventId") Long eventId,
             @Valid @RequestBody UpdateEventAdminRequest changedEventDto) {
-        log.info("Admin patch eventID={} event={}",eventId,changedEventDto);
-        EventDtoFull result = eventService.update(eventId, changedEventDto);
-        log.info("Result: {}", result);
-        return result;
+
+        log.info("Запрос на изменения события: eventId={}",eventId);
+        log.debug("changedEventDto: {}", changedEventDto);
+        return eventService.update(eventId, changedEventDto);
     }
 
     @PostMapping("/compilations")
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto createCompilation(@Valid @RequestBody NewCompilationDto newCompilationDto) {
 
+        log.info("Запрос на создание подборки.");
+        log.debug("newCompilationDto={}", newCompilationDto);
         return compilationService.create(newCompilationDto);
     }
 
@@ -122,6 +133,8 @@ public class AdminController {
             @PathVariable(name = "compId") Long compId,
             @Valid @RequestBody UpdateCompilationRequest updatedCompilationDto) {
 
+        log.info("Запрос на изменение подборки: compId={}", compId);
+        log.debug("updatedCompilationDto={}", updatedCompilationDto);
         return compilationService.update(compId, updatedCompilationDto);
     }
 
@@ -129,6 +142,7 @@ public class AdminController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeCompilation(@PathVariable(name = "compId") Long compId) {
 
+        log.info("Запрос на удаление подборки: compId={}.", compId);
         compilationService.remove(compId);
     }
 }

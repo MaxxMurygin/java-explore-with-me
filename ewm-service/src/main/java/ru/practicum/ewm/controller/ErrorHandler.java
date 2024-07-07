@@ -22,7 +22,6 @@ import java.util.Arrays;
 @RestControllerAdvice
 @Slf4j
 public class ErrorHandler {
-
     private final DateTimeFormatter formatter = EwmDateFormatter.getFormatter();
 
     @ExceptionHandler({NotFoundException.class})
@@ -38,7 +37,8 @@ public class ErrorHandler {
                 .build();
     }
 
-    @ExceptionHandler({AlreadyExistException.class, DataIntegrityViolationException.class,
+    @ExceptionHandler(
+            {AlreadyExistException.class, DataIntegrityViolationException.class,
             ValidationException.class, ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleAlreadyExist(final RuntimeException e) {
@@ -52,14 +52,8 @@ public class ErrorHandler {
                 .build();
     }
 
-//    @ExceptionHandler({ForbiddenException.class})
-//    @ResponseStatus(HttpStatus.FORBIDDEN)
-//    public ErrorResponse handleForbidden(final RuntimeException e) {
-//        log.debug(e.getMessage());
-//        return new ErrorResponse(e.getMessage());
-//    }
-
-    @ExceptionHandler({MethodArgumentNotValidException.class, NumberFormatException.class,
+    @ExceptionHandler(
+            {MethodArgumentNotValidException.class, NumberFormatException.class,
             BadRequestException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleOtherException(final Exception e) {

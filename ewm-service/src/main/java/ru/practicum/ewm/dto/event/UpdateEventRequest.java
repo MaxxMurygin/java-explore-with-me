@@ -1,13 +1,15 @@
 package ru.practicum.ewm.dto.event;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.practicum.ewm.model.Location;
 
 import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 
 @Data
-public class UpdateEventRequest {
+@NoArgsConstructor
+public abstract class UpdateEventRequest {
     @Size(min = 20, max = 2000, message = "Length of event annotation must be in range 20-2000")
     protected String annotation;
     protected Long category;
