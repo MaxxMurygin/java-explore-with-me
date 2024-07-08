@@ -1,7 +1,10 @@
 package ru.practicum.ewm.client;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -11,20 +14,26 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+@Service
+@Slf4j
 public class StatsClient {
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String url = "http://localhost:9090";
+    @Value("${ewm.stats.server.url}")
+    private String url;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public ResponseEntity<Object> post(String app, String uri, String ip, LocalDateTime timestamp) {
+
+
+    public void post(String app, String uri, String ip, LocalDateTime timestamp) {
         String uriString = UriComponentsBuilder.fromUriString(url + "/hit")
                 .toUriString();
+
         EndpointHitDto body = new EndpointHitDto(app,
                 uri,
                 ip,
                 timestamp.format(formatter));
 
-        return makeAndSendRequest(HttpMethod.POST, uriString, body);
+        makeAndSendRequest(HttpMethod.POST, uriString, body);
     }
 
     public ResponseEntity<Object> get(LocalDateTime start, LocalDateTime end, String[] uris, boolean unique) {
