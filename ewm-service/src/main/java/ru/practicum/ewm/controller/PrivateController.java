@@ -7,12 +7,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.ewm.dto.ModeratorCommentDto.CommentDto;
+import ru.practicum.ewm.dto.ModeratorCommentDto.CommentDtoRequest;
 import ru.practicum.ewm.dto.event.EventDtoFull;
 import ru.practicum.ewm.dto.event.NewEventDto;
 import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
 import ru.practicum.ewm.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.ewm.dto.request.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.dto.request.ParticipationRequestDto;
+import ru.practicum.ewm.service.CommentService;
 import ru.practicum.ewm.service.EventService;
 import ru.practicum.ewm.service.RequestService;
 
@@ -27,6 +30,7 @@ import java.util.List;
 public class PrivateController {
     private final EventService eventService;
     private final RequestService requestService;
+    private final CommentService commentService;
 
     @GetMapping("/{userId}/events")
     public List<EventDtoFull> getAllEventsByUser(
@@ -66,7 +70,7 @@ public class PrivateController {
             @PathVariable(name = "eventId") Long eventId,
             @Valid @RequestBody UpdateEventUserRequest changedEventDto) {
 
-        log.info("Запрос на изменение события пользователем: userId={}, eventId={}", initiatorId,eventId);
+        log.info("Запрос на изменение события пользователем: userId={}, eventId={}", initiatorId, eventId);
         log.debug("changedEventDto: " + changedEventDto);
         return eventService.update(initiatorId, eventId, changedEventDto);
     }
@@ -77,7 +81,7 @@ public class PrivateController {
             @PathVariable(name = "userId") @Positive Long userId,
             @PathVariable(name = "eventId") @Positive Long eventId) {
 
-        log.info("Запрос на вывод запросов на событие пользователя: userId={}, eventId={}", userId,eventId);
+        log.info("Запрос на вывод запросов на событие пользователя: userId={}, eventId={}", userId, eventId);
         return requestService.getAllByInitiatorId(userId, eventId);
     }
 
@@ -99,7 +103,7 @@ public class PrivateController {
             @PathVariable(name = "userId") @Positive Long userId,
             @RequestParam(name = "eventId") Long eventId) {
 
-        log.info("Запрос на участие в событии пользователя: userId={}, eventId={}", userId,eventId);
+        log.info("Запрос на участие в событии пользователя: userId={}, eventId={}", userId, eventId);
         return requestService.create(userId, eventId);
     }
 
@@ -108,7 +112,7 @@ public class PrivateController {
             @PathVariable(name = "userId") Long userId,
             @PathVariable(name = "requestId") Long requestId) {
 
-        log.info("Отмена запроса на участие в событии пользователя: userId={}, requestId={}", userId,requestId);
+        log.info("Отмена запроса на участие в событии пользователя: userId={}, requestId={}", userId, requestId);
         return requestService.cancel(userId, requestId);
     }
 
@@ -118,5 +122,26 @@ public class PrivateController {
 
         log.info("Просмотр своих запросов на участие в событии пользователя: userId={}", userId);
         return requestService.getAllByRequesterId(userId);
+    }
+
+    @PostMapping("/{userId}/comments")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CommentDto createComment(
+            @PathVariable(name = "userId") @Positive Long userId,
+            @RequestParam(name = "eventId") Long eventId,
+            @Valid @RequestBody CommentDtoRequest comment) {
+
+        log.info("Создание комментария пользователем: userId={}, eventId={}", userId, eventId);
+        return commentService.create(userId, eventId, comment);
+    }
+
+    @PatchMapping("/{userId}/comments/{commentId}")
+    public CommentDto updateComment(
+            @PathVariable(name = "userId") @Positive Long userId,
+            @PathVariable(name = "commentId") @Positive Long commentId,
+            @Valid @RequestBody CommentDtoRequest comment) {
+
+        log.info("Редактирование комментария пользователем: userId={}, commentId={}", userId, commentId);
+        return commentService.update(userId, commentId, comment);
     }
 }
