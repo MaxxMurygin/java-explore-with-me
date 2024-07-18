@@ -3,6 +3,7 @@ package ru.practicum.ewm.repository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import ru.practicum.ewm.model.Event;
 
 import java.util.List;
@@ -12,5 +13,5 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
 
     List<Event> findAllByCategoryId(Long categoryId);
 
-    List<Event> findByIdIn(List<Long> eventsIds);
+    List<Event> findByIdIn(List<Long> eventsIds, Pageable pageable);
 }

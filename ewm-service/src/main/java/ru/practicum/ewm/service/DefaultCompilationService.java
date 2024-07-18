@@ -37,7 +37,7 @@ public class DefaultCompilationService implements CompilationService {
             newCompilationDto.setPinned(false);
         }
         if (newCompilationDto.getEvents() != null) {
-            eventList = eventRepository.findByIdIn(newCompilationDto.getEvents());
+            eventList = eventRepository.findAllById(newCompilationDto.getEvents());
         }
 
         Compilation newCompilation = Compilation.builder()
@@ -72,7 +72,7 @@ public class DefaultCompilationService implements CompilationService {
         List<Event> eventList = new ArrayList<>();
 
         if (changedCompilationDto.getEvents() != null) {
-            eventList = eventRepository.findByIdIn(changedCompilationDto
+            eventList = eventRepository.findAllById(changedCompilationDto
                     .getEvents()
                     .stream()
                     .distinct()

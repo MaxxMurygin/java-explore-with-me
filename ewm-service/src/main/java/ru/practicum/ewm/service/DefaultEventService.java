@@ -12,12 +12,14 @@ import ru.practicum.ewm.exception.BadRequestException;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.ValidationException;
 import ru.practicum.ewm.model.Category;
+import ru.practicum.ewm.model.CommentCounter;
 import ru.practicum.ewm.model.Event;
 import ru.practicum.ewm.model.User;
 import ru.practicum.ewm.model.enums.EventState;
 import ru.practicum.ewm.model.enums.EventStateAdminAction;
 import ru.practicum.ewm.model.enums.EventStateUserAction;
 import ru.practicum.ewm.repository.CategoryRepository;
+import ru.practicum.ewm.repository.CommentRepository;
 import ru.practicum.ewm.repository.EventRepository;
 import ru.practicum.ewm.repository.UserRepository;
 
@@ -39,6 +41,7 @@ public class DefaultEventService implements EventService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
+    private final CommentRepository commentRepository;
     private final DateTimeFormatter formatter = EwmDateFormatter.getFormatter();
 
 
@@ -219,7 +222,7 @@ public class DefaultEventService implements EventService {
     @Override
     public List<EventDtoShort> findAllByIds(List<Long> eventsIds) {
 
-        List<Event> eventList = eventRepository.findByIdIn(eventsIds);
+        List<Event> eventList = eventRepository.findAllById(eventsIds);
 
         return eventList.stream()
                 .map(EventMapper::toEventDtoShort)
@@ -297,6 +300,21 @@ public class DefaultEventService implements EventService {
 
         return eventRepository
                 .findAll(getPublicQuery(text, categoryList, paid, start, end, onlyAvailable), pageable).toList()
+                .stream()
+                .map(EventMapper::toEventDtoShort)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventDtoShort> findMostDiscussed(Pageable pageable) {
+        List<Long> eventIds = commentRepository
+                .findMostDiscussedEvents()
+                .stream()
+                .map(CommentCounter::getKeyId)
+                .collect(Collectors.toList());
+
+        return eventRepository
+                .findByIdIn(eventIds, pageable)
                 .stream()
                 .map(EventMapper::toEventDtoShort)
                 .collect(Collectors.toList());

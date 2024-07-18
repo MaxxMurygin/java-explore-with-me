@@ -7,8 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.dto.ModeratorCommentDto.CommentDto;
-import ru.practicum.ewm.dto.ModeratorCommentDto.CommentDtoRequest;
+import ru.practicum.ewm.dto.comment.CommentDto;
+import ru.practicum.ewm.dto.comment.CommentDtoRequest;
 import ru.practicum.ewm.dto.event.EventDtoFull;
 import ru.practicum.ewm.dto.event.NewEventDto;
 import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
@@ -143,5 +143,15 @@ public class PrivateController {
 
         log.info("Редактирование комментария пользователем: userId={}, commentId={}", userId, commentId);
         return commentService.update(userId, commentId, comment);
+    }
+
+    @DeleteMapping("/{userId}/comments/{commentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteComment(
+            @PathVariable(name = "userId") @Positive Long userId,
+            @PathVariable(name = "commentId") @Positive Long commentId) {
+
+        log.info("Удаление комментария пользователем: userId={}, commentId={}", userId, commentId);
+        commentService.delete(userId, commentId);
     }
 }

@@ -34,4 +34,6 @@ public interface EventService {
                                         String end,
                                         Boolean onlyAvailable,
                                         Pageable pageable);
+
+    List<EventDtoShort> findMostDiscussed(Pageable pageable);
 }

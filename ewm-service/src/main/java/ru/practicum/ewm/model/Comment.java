@@ -22,9 +22,8 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotNull
-    @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "event_id", referencedColumnName = "id")
-    private Event event;
+    @Column(name = "event_id")
+    private Long eventId;
     @Size(min = 2, max = 2000, message = "Содержание должно быть в диапазоне 2-2000 символов")
     private String text;
     @NotNull

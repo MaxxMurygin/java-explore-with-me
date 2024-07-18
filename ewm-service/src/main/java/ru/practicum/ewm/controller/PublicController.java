@@ -7,11 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.client.StatsClient;
+import ru.practicum.ewm.dto.comment.CommentDto;
 import ru.practicum.ewm.dto.category.CategoryDto;
 import ru.practicum.ewm.dto.compilation.CompilationDto;
 import ru.practicum.ewm.dto.event.EventDtoFull;
 import ru.practicum.ewm.dto.event.EventDtoShort;
 import ru.practicum.ewm.service.CategoryService;
+import ru.practicum.ewm.service.CommentService;
 import ru.practicum.ewm.service.CompilationService;
 import ru.practicum.ewm.service.EventService;
 
@@ -28,6 +30,7 @@ public class PublicController {
     private final EventService eventService;
     private final CategoryService categoryService;
     private final CompilationService compilationService;
+    private final CommentService commentService;
     private final StatsClient statsClient;
     private static final String APP = "ewm-service";
 
@@ -70,6 +73,15 @@ public class PublicController {
         return events;
     }
 
+    @GetMapping("/events/discussed")
+    public List<EventDtoShort> getMostDiscussed(
+            @RequestParam(name = "from", defaultValue = "0") Integer from,
+            @RequestParam(name = "size", defaultValue = "10") Integer size) {
+        Pageable userPage = PageRequest.of(from / size, size);
+
+        return eventService.findMostDiscussed(userPage);
+    }
+
     @GetMapping("/events/{eventId}")
     public EventDtoFull getEvent(
             @PathVariable(name = "eventId") @Positive Long eventId,
@@ -80,6 +92,18 @@ public class PublicController {
         log.debug("Event: {}", event);
         statsClient.post(APP, request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now());
         return event;
+    }
+
+    @GetMapping("/events/{eventId}/comments")
+    public List<CommentDto>  getCommentsByEvent(
+            @RequestParam(name = "from", defaultValue = "0") Integer from,
+            @RequestParam(name = "size", defaultValue = "10") Integer size,
+            @PathVariable(name = "eventId") @Positive Long eventId) {
+
+        Pageable userPage = PageRequest.of(from, size, Sort.by("createdOn").descending());
+
+        log.info("Запрос на просмотр комментариев к событию eventId= {}", eventId);
+        return commentService.findAllByEvent(eventId, userPage);
     }
 
     @GetMapping("/categories")
