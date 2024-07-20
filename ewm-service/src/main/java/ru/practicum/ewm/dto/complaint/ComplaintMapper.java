@@ -1,7 +1,6 @@
 package ru.practicum.ewm.dto.complaint;
 
 import ru.practicum.ewm.common.EwmDateFormatter;
-import ru.practicum.ewm.dto.comment.CommentDto;
 import ru.practicum.ewm.model.Comment;
 import ru.practicum.ewm.model.Complaint;
 import ru.practicum.ewm.model.User;
@@ -25,7 +24,7 @@ public class ComplaintMapper {
         return ComplaintDto.builder()
                 .id(complaint.getId())
                 .text(complaint.getText())
-                .created(complaint.getCreated().format(formatter))
+                .created(complaint.getCreatedOn().format(formatter))
                 .commentId(complaint.getComment().getId())
                 .complainantId(complaint.getComplainant().getId())
                 .status(complaint.getStatus())

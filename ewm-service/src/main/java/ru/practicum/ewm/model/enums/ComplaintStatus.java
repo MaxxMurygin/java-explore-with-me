@@ -1,8 +1,9 @@
 package ru.practicum.ewm.model.enums;
 
-public enum ComplainStatus {
+public enum ComplaintStatus {
     FILED,
     SATISFIED,
     REJECTED,
-    ON_REVIEW
+    ON_REVIEW,
+    CANCELED
 }

@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.ewm.model.enums.ComplainStatus;
+import ru.practicum.ewm.model.enums.ComplaintStatus;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -12,7 +12,7 @@ import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "complains")
+@Table(name = "complaints")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,10 +31,10 @@ public class Complaint {
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "complainant_id", referencedColumnName = "id")
     private User complainant;
-    @NotNull
     @Column(name = "created_on")
-    private LocalDateTime created;
-    @NotNull
-    @Enumerated
-    private ComplainStatus status;
+    private LocalDateTime createdOn;
+    @Column(name = "reviewed_on")
+    private LocalDateTime reviewedOn;
+    @Enumerated(EnumType.STRING)
+    private ComplaintStatus status;
 }

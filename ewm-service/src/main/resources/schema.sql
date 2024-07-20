@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS complaints
     text character varying(1000),
     status character varying(10),
     created_on TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    reviewed_on TIMESTAMP WITHOUT TIME ZONE,
     CONSTRAINT pk_complaints PRIMARY KEY (id),
     CONSTRAINT fk_complaints_comments FOREIGN KEY (comment_id)
         REFERENCES comments (id)

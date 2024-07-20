@@ -32,6 +32,6 @@ public class EventRequest {
     @Column(name = "created_on")
     private LocalDateTime created;
     @NotNull
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private EventRequestStatus status;
 }

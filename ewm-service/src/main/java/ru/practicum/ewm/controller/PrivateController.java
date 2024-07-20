@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.dto.comment.CommentDto;
 import ru.practicum.ewm.dto.comment.CommentDtoRequest;
+import ru.practicum.ewm.dto.complaint.ComplaintDto;
+import ru.practicum.ewm.dto.complaint.ComplaintDtoRequest;
 import ru.practicum.ewm.dto.event.EventDtoFull;
 import ru.practicum.ewm.dto.event.NewEventDto;
 import ru.practicum.ewm.dto.event.UpdateEventUserRequest;
@@ -16,6 +18,7 @@ import ru.practicum.ewm.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.ewm.dto.request.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.dto.request.ParticipationRequestDto;
 import ru.practicum.ewm.service.CommentService;
+import ru.practicum.ewm.service.ComplaintService;
 import ru.practicum.ewm.service.EventService;
 import ru.practicum.ewm.service.RequestService;
 
@@ -31,6 +34,7 @@ public class PrivateController {
     private final EventService eventService;
     private final RequestService requestService;
     private final CommentService commentService;
+    private final ComplaintService complaintService;
 
     @GetMapping("/{userId}/events")
     public List<EventDtoFull> getAllEventsByUser(
@@ -153,5 +157,25 @@ public class PrivateController {
 
         log.info("Удаление комментария пользователем: userId={}, commentId={}", userId, commentId);
         commentService.delete(userId, commentId);
+    }
+
+    @PostMapping("/{userId}/comments/{commentId}/complaints")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ComplaintDto createComplaint(
+            @PathVariable(name = "userId") @Positive Long userId,
+            @PathVariable(name = "commentId") @Positive Long commentId,
+            @Valid @RequestBody ComplaintDtoRequest complaint) {
+
+        log.info("Создание жалобы на комментарий пользователем: userId={}, commentId={}", userId, commentId);
+        return complaintService.create(userId, commentId, complaint);
+    }
+
+    @PatchMapping("/{userId}/complaints/{complaintId}/cancel")
+    public ComplaintDto createComplaint(
+            @PathVariable(name = "userId") @Positive Long userId,
+            @PathVariable(name = "complaintId") @Positive Long complaintId) {
+
+        log.info("Отмена жалобы на комментарий пользователем: userId={}, complaintId={}", userId, complaintId);
+        return complaintService.cancel(userId, complaintId);
     }
 }

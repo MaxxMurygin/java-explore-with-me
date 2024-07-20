@@ -12,14 +12,15 @@ import ru.practicum.ewm.dto.category.NewCategoryDto;
 import ru.practicum.ewm.dto.compilation.CompilationDto;
 import ru.practicum.ewm.dto.compilation.NewCompilationDto;
 import ru.practicum.ewm.dto.compilation.UpdateCompilationRequest;
+import ru.practicum.ewm.dto.complaint.ComplaintAdminReview;
+import ru.practicum.ewm.dto.complaint.ComplaintDto;
 import ru.practicum.ewm.dto.event.EventDtoFull;
 import ru.practicum.ewm.dto.event.UpdateEventAdminRequest;
 import ru.practicum.ewm.dto.user.NewUserRequest;
 import ru.practicum.ewm.dto.user.UserDto;
-import ru.practicum.ewm.service.CategoryService;
-import ru.practicum.ewm.service.CompilationService;
-import ru.practicum.ewm.service.EventService;
-import ru.practicum.ewm.service.UserService;
+import ru.practicum.ewm.model.Complaint;
+import ru.practicum.ewm.model.enums.ComplaintStatus;
+import ru.practicum.ewm.service.*;
 
 import javax.validation.Valid;
 import java.util.*;
@@ -33,6 +34,7 @@ public class AdminController {
     private final CategoryService categoryService;
     private final EventService eventService;
     private final CompilationService compilationService;
+    private final ComplaintService complaintService;
 
     @GetMapping("/users")
     public List<UserDto> findUsers(
@@ -144,5 +146,28 @@ public class AdminController {
 
         log.info("Запрос на удаление подборки: compId={}.", compId);
         compilationService.remove(compId);
+    }
+
+    @GetMapping("/complaints")
+    public List<ComplaintDto> findComplaints(
+            @RequestParam(name = "statuses", required = false) ComplaintStatus[] statuses,
+            @RequestParam(name = "from", defaultValue = "0") Integer from,
+            @RequestParam(name = "size", defaultValue = "10") Integer size) {
+
+        Pageable userPage = PageRequest.of(from, size, Sort.by("createdOn").ascending());
+
+        log.info("Запрос на поиск жалоб: statuses={}, from={}, size={}", statuses, from, size);
+
+        return complaintService.getAll(statuses, userPage);
+    }
+
+    @PatchMapping("/complaints/{complaintId}")
+    public ComplaintDto updateComplaint(
+            @PathVariable(name = "complaintId") Long complaintId,
+            @Valid @RequestBody ComplaintAdminReview adminReview) {
+
+        log.info("Запрос на рассмотрение жалобы: complaintId={}", complaintId);
+        log.debug("adminReview={}", adminReview);
+        return complaintService.review(complaintId, adminReview);
     }
 }

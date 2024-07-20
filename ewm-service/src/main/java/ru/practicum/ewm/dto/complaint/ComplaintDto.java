@@ -2,10 +2,9 @@ package ru.practicum.ewm.dto.complaint;
 
 import lombok.Builder;
 import lombok.Data;
-import ru.practicum.ewm.model.enums.ComplainStatus;
+import ru.practicum.ewm.model.enums.ComplaintStatus;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -21,5 +20,5 @@ public class ComplaintDto {
     @NotNull
     private String created;
     @NotNull
-    private ComplainStatus status;
+    private ComplaintStatus status;
 }
