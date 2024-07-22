@@ -314,7 +314,7 @@ public class DefaultEventService implements EventService {
                 .collect(Collectors.toList());
 
         return eventRepository
-                .findByIdIn(eventIds, pageable)
+                .findByIdInSortAsPassed(eventIds, pageable)
                 .stream()
                 .map(EventMapper::toEventDtoShort)
                 .collect(Collectors.toList());

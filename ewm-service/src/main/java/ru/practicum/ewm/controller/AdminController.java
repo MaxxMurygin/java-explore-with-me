@@ -18,12 +18,11 @@ import ru.practicum.ewm.dto.event.EventDtoFull;
 import ru.practicum.ewm.dto.event.UpdateEventAdminRequest;
 import ru.practicum.ewm.dto.user.NewUserRequest;
 import ru.practicum.ewm.dto.user.UserDto;
-import ru.practicum.ewm.model.Complaint;
 import ru.practicum.ewm.model.enums.ComplaintStatus;
 import ru.practicum.ewm.service.*;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin")

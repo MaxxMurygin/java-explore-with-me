@@ -16,7 +16,7 @@ public class ComplaintDto {
     @NotNull
     private Long commentId;
     @NotNull
-    private Long complainantId  ;
+    private Long complainantId;
     @NotNull
     private String created;
     @NotNull
