@@ -5,3 +5,5 @@ ExploreWithMe.
 Публичная часть позволяет возможность поиска и фильтрации событий.
 Приватная часть позволяет создавать мероприятия, принимать заявки на участие в своих и подавать заявки на участие в чужих.
 Административная часть включает в себя управление пользователями, категориями событий, модерирование событий и комментариев к ним, создание подборок событий. 
+https://github.com/MaxxMurygin/java-explore-with-me/blob/main/ewm-main-service-spec.json
+https://github.com/MaxxMurygin/java-explore-with-me/blob/main/ewm-stats-service-spec.json
