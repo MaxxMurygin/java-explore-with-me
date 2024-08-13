@@ -13,7 +13,10 @@
 
 Данные хранятся в PostgreSQL, для кажного модуля запускается свои контейнер с БД.
 
-Для запуска приложения необходимо запустить docker-compose.yml
+Для запуска приложения:
+- mvn clean package
+- docker-compose build
+- docker-compose up
   
 [Swagger спецификация основного сервиса](https://github.com/MaxxMurygin/java-explore-with-me/blob/main/ewm-main-service-spec.json)  
 [Swagger спецификация сервиса статистики](https://github.com/MaxxMurygin/java-explore-with-me/blob/main/ewm-stats-service-spec.json)
